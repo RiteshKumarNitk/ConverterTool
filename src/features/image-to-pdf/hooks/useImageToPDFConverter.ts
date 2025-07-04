@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ConversionResult } from '../types';
-import { convertImageToPDF } from '../utils/fileConverter';
+import { convertImageToPDF } from '../../../utils/fileConverter';
+import { ConversionResult } from './../../../types/index';
 
 export const useImageToPDFConverter = () => {
   const [results, setResults] = useState<ConversionResult[]>([]);

@@ -9,6 +9,7 @@ interface NavbarProps {
   setActiveTool: (tool: ToolType) => void;
 }
 
+
 export const Navbar: React.FC<NavbarProps> = ({ activeTool, setActiveTool }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -19,7 +20,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTool, setActiveTool }) => 
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <FileText className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-800">FileTools Pro</span>
+              {/* <span className="ml-2 text-xl font-bold text-gray-800">FileTools Pro</span> */}
+                <Button
+                  variant={activeTool === 'home' ? 'primary' : 'secondary'}
+                  onClick={() => setActiveTool('home')}
+                >
+                  FileTools Pro
+                </Button>
             </div>
             <div className="hidden md:block ml-10">
               <div className="flex space-x-4">

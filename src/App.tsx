@@ -1,14 +1,15 @@
 import React from 'react';
 import { ToolType } from './types';
 import { Navbar } from './components/layout/Navbar';
+import { AllTools } from './components/tools/AllTools';
 import { PdfTools } from './components/tools/PdfTools';
-import { ImageTools } from './components/tools/ImageTools';
+import { ImageTools } from './features/image-to-pdf/components/ImageTools';
 import { SignatureTools } from './components/tools/SignatureTools';
 import { MergeTools } from './components/tools/MergeTools';
 import { useMobileDetection } from './hooks/useMobileDetection';
 
 export const App: React.FC = () => {
-  const [activeTool, setActiveTool] = React.useState<ToolType>('pdf');
+  const [activeTool, setActiveTool] = React.useState<ToolType>('home');
   const isMobile = useMobileDetection();
 
   const renderTool = () => {
@@ -21,22 +22,21 @@ export const App: React.FC = () => {
         return <SignatureTools />;
       case 'merge':
         return <MergeTools />;
+      case 'home':
       default:
-        return <PdfTools />;
+        return <AllTools setActiveTool={setActiveTool} activeTool={activeTool} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       <Navbar activeTool={activeTool} setActiveTool={setActiveTool} />
-      
       <div className="container mx-auto px-4 py-8">
         {renderTool()}
       </div>
     </div>
   );
 };
-
 
 // import React, { useState, useCallback, useEffect } from 'react';
 // import { Upload, FileImage, FileText, Download, Loader2, CheckCircle, AlertCircle } from 'lucide-react';

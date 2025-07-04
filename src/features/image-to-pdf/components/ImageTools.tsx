@@ -1,12 +1,11 @@
 import React from 'react';
-import { FileImage, AlertCircle } from 'lucide-react';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { FileDropzone } from '../common/FileDropzone';
-import { ConversionResults } from '../common/ConversionResults';
-import { FeaturesSection } from '../common/FeaturesSection';
+import {  AlertCircle } from 'lucide-react';
+import { Card } from '../../../components/ui/Card';
+import { FileDropzone } from '../../../components/common/FileDropzone';
+import { ConversionResults } from '../../../components/common/ConversionResults';
+import { FeaturesSection } from '../../../components/common/FeaturesSection';
 // import { useFileConverter } from '../../hooks/useFileConverter';
-import { usePDFToImageConverter } from '../../hooks/usePDFToImageConverter';
+import { usePDFToImageConverter } from '../../pdf-to-image/hooks/usePDFToImageConverter';
 
 interface ImageToolsProps {
   isMobile: boolean;

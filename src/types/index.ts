@@ -4,4 +4,4 @@ export interface ConversionResult {
   type: 'pdf' | 'image';
 }
 
-export type ToolType = 'pdf' | 'image' | 'signature' | 'merge';
+export type ToolType = 'home' | 'pdf' | 'image' | 'signature' | 'merge';

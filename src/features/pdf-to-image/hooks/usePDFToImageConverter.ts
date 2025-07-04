@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ConversionResult } from '../types';
-import { convertPDFToImages } from '../utils/fileConverter';
+import { ConversionResult } from '../../../types';
+import { convertPDFToImages } from '../../../utils/fileConverter';
+
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;

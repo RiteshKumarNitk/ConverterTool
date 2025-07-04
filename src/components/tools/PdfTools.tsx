@@ -3,7 +3,7 @@ import { FileDropzone } from '../common/FileDropzone';
 import { ConversionResults } from '../common/ConversionResults';
 import { FeaturesSection } from '../common/FeaturesSection';
 // import { useFileConverter } from '../../hooks/useFileConverter';
-import { useImageToPDFConverter } from '../../hooks/useImageToPDFConverter';
+import { useImageToPDFConverter } from '../../features/image-to-pdf/hooks/useImageToPDFConverter';
 
 
 export const PdfTools: React.FC = () => {
