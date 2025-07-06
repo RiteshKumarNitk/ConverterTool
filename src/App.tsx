@@ -7,6 +7,8 @@ import { ImageTools } from './features/image-to-pdf/components/ImageTools';
 import { SignatureTools } from './components/tools/SignatureTools';
 import { MergeTools } from './components/tools/MergeTools';
 import { useMobileDetection } from './hooks/useMobileDetection';
+import RenameImageTools from './features/rename-image/components/RenameImageTools';
+import AnyToImageTools from './features/any-to-gpg/components/AnyToImageTools';
 
 export const App: React.FC = () => {
   const [activeTool, setActiveTool] = React.useState<ToolType>('home');
@@ -22,6 +24,10 @@ export const App: React.FC = () => {
         return <SignatureTools />;
       case 'merge':
         return <MergeTools />;
+      case 'AnyFile':
+        return <AnyToImageTools />;
+      case 'rename-image':
+      return <RenameImageTools />;
       case 'home':
       default:
         return <AllTools setActiveTool={setActiveTool} activeTool={activeTool} />;

@@ -1,7 +1,19 @@
 import React from 'react';
-import { FileImage, FileText, PenTool, Layers } from 'lucide-react';
+import {
+  FileImage,
+  FileText,
+  PenTool,
+  Layers,
+  FilePen,
+  Image,
+} from 'lucide-react';
 import { ToolType } from '../../types';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from '@hello-pangea/dnd';
 import { ToolCard } from './../ui/ToolCard';
 
 interface AllToolsProps {
@@ -17,31 +29,46 @@ const toolsList: {
 }[] = [
   {
     title: 'Image to PDF',
-    description: 'Convert images like JPG, PNG to PDF easily.',
+    description: 'Convert JPG, PNG images into a single PDF document.',
     toolKey: 'pdf',
-    icon: <FileImage className="w-5 h-5" />,
+    icon: <FileImage className="w-5 h-5 text-blue-600" />,
   },
   {
     title: 'PDF to Image',
-    description: 'Convert each page of a PDF to PNG or JPG.',
+    description: 'Extract images from PDF pages in PNG/JPG format.',
     toolKey: 'image',
-    icon: <FileText className="w-5 h-5" />,
+    icon: <FileText className="w-5 h-5 text-green-600" />,
   },
   {
     title: 'E-Signatures',
-    description: 'Sign your PDF or request others to sign.',
+    description: 'Sign your PDFs or request others to sign securely.',
     toolKey: 'signature',
-    icon: <PenTool className="w-5 h-5" />,
+    icon: <PenTool className="w-5 h-5 text-red-600" />,
+  },
+  {
+    title: 'Rename Image Files',
+    description: 'Remove prefixes or batch rename images automatically.',
+    toolKey: 'rename-image',
+    icon: <FilePen className="w-5 h-5 text-indigo-600" />,
   },
   {
     title: 'Merge PDFs',
-    description: 'Combine multiple PDF files into one.',
+    description: 'Combine multiple PDFs into a single organized file.',
     toolKey: 'merge',
-    icon: <Layers className="w-5 h-5" />,
-  }
+    icon: <Layers className="w-5 h-5 text-yellow-600" />,
+  },
+  {
+  title: 'any-to-image',
+  description: 'Convert DOCX, TXT, HTML, etc. into PNG or JPG images.',
+  toolKey: 'AnyFile',
+  icon: <Image className="w-5 h-5 text-purple-600" />,
+}
 ];
 
-export const AllTools: React.FC<AllToolsProps> = ({ activeTool, setActiveTool }) => {
+export const AllTools: React.FC<AllToolsProps> = ({
+  activeTool,
+  setActiveTool,
+}) => {
   const [tools, setTools] = React.useState(toolsList);
 
   const onDragEnd = (result: DropResult) => {
@@ -55,8 +82,10 @@ export const AllTools: React.FC<AllToolsProps> = ({ activeTool, setActiveTool })
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Choose a Tool</h1>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-10 text-center text-gray-900">
+        All File Converter Tools
+      </h1>
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="toolGrid" direction="horizontal">
@@ -67,7 +96,11 @@ export const AllTools: React.FC<AllToolsProps> = ({ activeTool, setActiveTool })
               ref={provided.innerRef}
             >
               {tools.map((tool, index) => (
-                <Draggable key={tool.toolKey} draggableId={tool.toolKey} index={index}>
+                <Draggable
+                  key={tool.toolKey}
+                  draggableId={tool.toolKey}
+                  index={index}
+                >
                   {(provided) => (
                     <div
                       ref={provided.innerRef}
