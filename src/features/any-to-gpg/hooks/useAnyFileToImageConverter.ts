@@ -18,13 +18,13 @@ export const useAnyFileToImageConverter = () => {
     setIsConverting(true);
 
     // Validation
-    if (files.length > 20) {
-      setError('You can upload up to 20 files only.');
+    if (files.length > 1500) {
+      setError('You can upload up to 1500 files only.');
       setIsConverting(false);
       return;
     }
 
-    const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+    const oversized = files.find(f => f.size > 10 * 1024 * 1024);
     if (oversized) {
       setError(`File "${oversized.name}" is larger than 5MB.`);
       setIsConverting(false);

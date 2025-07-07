@@ -58,32 +58,38 @@ const AnyToImageTools: React.FC = () => {
       {isConverting && <p className="text-blue-600">Converting files...</p>}
       {error && <p className="text-red-600">{error}</p>}
 
-      {results.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="font-semibold text-gray-700">Download Converted Images</h3>
-          <ul className="space-y-2">
-            {results.map((res, index) => (
-              <li key={index} className="flex items-center justify-between">
-                <span>{res.fileName}</span>
-                <a
-                  href={res.downloadUrl}
-                  download={res.fileName}
-                  className="text-blue-600 hover:underline flex items-center"
-                >
-                  <Download className="w-4 h-4 mr-1" /> Download
-                </a>
-              </li>
-            ))}
-          </ul>
+     {results.length > 0 && (
+  <div className="space-y-4">
+    <h3 className="font-semibold text-gray-700">Download Converted Images</h3>
+    
+    {/* Scrollable List Container */}
+    <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+      <ul className="space-y-2">
+        {results.map((res, index) => (
+          <li key={index} className="flex items-center justify-between">
+            <span className="truncate">{res.fileName}</span>
+            <a
+              href={res.downloadUrl}
+              download={res.fileName}
+              className="text-blue-600 hover:underline flex items-center"
+            >
+              <Download className="w-4 h-4 mr-1" /> Download
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
 
-          <button
-            onClick={downloadAllAsZip}
-            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition mt-4"
-          >
-            <FolderDown className="w-4 h-4 mr-2" /> Download All as ZIP
-          </button>
-        </div>
-      )}
+    {/* Download All Button */}
+    <button
+      onClick={downloadAllAsZip}
+      className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition mt-2"
+    >
+      <FolderDown className="w-4 h-4 mr-2" /> Download All as ZIP
+    </button>
+  </div>
+)}
+
     </div>
   );
 };
