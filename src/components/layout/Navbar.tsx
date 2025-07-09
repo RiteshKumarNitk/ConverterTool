@@ -83,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Dropdown (centered under Tools) */}
             <div
               className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 
-               absolute left-1/2 transform -translate-x-1/2 top-full mt-3 bg-white shadow-xl border border-gray-200 
+               absolute right-1/4 top-full mt-3 bg-white shadow-xl border border-gray-200 
                rounded-xl w-[500px] p-4 z-50"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
