@@ -13,6 +13,8 @@ import AnyToImageTools from './features/any-to-gpg/components/AnyToImageTools';
 import CompressTools from './features/compress/components/CompressTools';
 
 import { useMobileDetection } from './hooks/useMobileDetection';
+import QRCodeGenerator from './features/QRCodeGenerator/components/QRCodeGenerator';
+import FilterDataWithName from './features/AnyToJpeg/components/FilterDataWithName';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -30,8 +32,12 @@ export const App: React.FC = () => {
             <Route path="/merge" element={<MergeTools />} />
             <Route path="/rename-image" element={<RenameImageTools />} />
             <Route path="/split-pdf" element={<SplitPDFTools />} />
+            <Route path="/QRCodeGenerator" element={<QRCodeGenerator />} />
+
             <Route path="/any-to-image" element={<AnyToImageTools />} />
             <Route path="/compress" element={<CompressTools />} />
+            <Route path="/FilterImageName" element={<FilterDataWithName />} />
+            
             {/* Optional fallback route */}
             <Route path="*" element={<AllTools />} />
           </Routes>
