@@ -73,8 +73,8 @@ const toolsList: {
   },
   {
   title: 'any-to-image',
-  description: 'Convert DOCX, TXT, HTML, etc. into PNG or JPG images.',
-  toolKey: 'AnyFile',
+  description: 'Convert image and PDF Builk Data into PNG or JPG images.',
+  toolKey: 'any-to-image',
   icon: <Image className="w-5 h-5 text-purple-600" />,
 }
 ];

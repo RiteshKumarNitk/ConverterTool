@@ -15,6 +15,7 @@ export const Navbar: React.FC = () => {
   const convertTools = [
     { label: "Image to PDF", link: "/pdf" },
     { label: "PDF to Image", link: "/image" },
+    { label: "PDF/IMG to Image", link: "/any-to-image" },
   ];
 
   const allTools = [
