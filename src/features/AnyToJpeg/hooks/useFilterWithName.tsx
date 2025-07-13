@@ -16,8 +16,8 @@ export const useFilterWithName = () => {
     setError(null);
     setIsConverting(true);
 
-    if (files.length > 1500) {
-      setError('You can upload up to 1500 files only.');
+    if (files.length > 2500) {
+      setError('You can upload up to 2500 files only.');
       setIsConverting(false);
       return;
     }
