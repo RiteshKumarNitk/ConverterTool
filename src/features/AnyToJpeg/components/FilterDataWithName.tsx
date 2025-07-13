@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFilterWithName } from '../hooks/useFilterWithName';
-import { Download, Filter, FolderDown } from 'lucide-react';
+import { Download, FolderDown, Trash2 } from 'lucide-react';
 
 const FilterDataWithName: React.FC = () => {
   const [outputFormat, setOutputFormat] = useState<'jpeg' | 'png'>('jpeg');
@@ -11,9 +11,12 @@ const FilterDataWithName: React.FC = () => {
     handleFiles,
     downloadAllAsZip,
     downloadSelectedAsZip,
+    removeFile,
   } = useFilterWithName();
+
   const [dragActive, setDragActive] = useState(false);
   const [selectedNames, setSelectedNames] = useState<string>('');
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -25,19 +28,40 @@ const FilterDataWithName: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files.length > 0) {
       handleFiles(Array.from(e.dataTransfer.files), outputFormat);
     }
   };
 
+  const toggleFileSelection = (fileName: string) => {
+    setSelectedFiles((prev) => {
+      const updated = new Set(prev);
+      updated.has(fileName) ? updated.delete(fileName) : updated.add(fileName);
+      return updated;
+    });
+  };
+
+  const handleDownloadSelected = () => {
+    const namesFromTextarea = selectedNames
+      .split(',')
+      .map((name) => name.trim().toLowerCase())
+      .filter(Boolean);
+    const combined = new Set([...Array.from(selectedFiles), ...namesFromTextarea]);
+    downloadSelectedAsZip(Array.from(combined).join(','));
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 mt-6 bg-white shadow-md rounded-lg space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">Convert PDF/JPG/PNG to JPEG or PNG</h2>
+      <h2 className="text-xl font-semibold text-gray-800">
+        Convert PDF/JPG/PNG to JPEG or PNG
+      </h2>
 
       <div
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed p-6 rounded-md text-center ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+        className={`border-2 border-dashed p-6 rounded-md text-center ${
+          dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+        }`}
       >
         <p className="text-gray-600">Drag & drop files here or select manually</p>
         <div className="flex items-center gap-3 mt-4">
@@ -75,18 +99,34 @@ const FilterDataWithName: React.FC = () => {
             className="w-full border rounded-md p-2"
           />
 
-          <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+          <div className="max-h-64 overflow-y-auto border rounded-md p-2">
             <ul className="space-y-2">
               {results.map((res, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span className="truncate">{res.fileName}</span>
-                  <a
-                    href={res.downloadUrl}
-                    download={res.fileName}
-                    className="text-blue-600 hover:underline flex items-center"
-                  >
-                    <Download className="w-4 h-4 mr-1" /> Download
-                  </a>
+                <li key={index} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.has(res.fileName)}
+                      onChange={() => toggleFileSelection(res.fileName)}
+                    />
+                    <span className="truncate">{res.fileName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={res.downloadUrl}
+                      download={res.fileName}
+                      className="text-blue-600 hover:underline flex items-center"
+                    >
+                      <Download className="w-4 h-4 mr-1" /> Download
+                    </a>
+                    <button
+                      onClick={() => removeFile(res.fileName)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Remove file"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -94,7 +134,7 @@ const FilterDataWithName: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-2">
             <button
-              onClick={() => downloadSelectedAsZip(selectedNames)}
+              onClick={handleDownloadSelected}
               className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
             >
               <FolderDown className="w-4 h-4 mr-2" /> Download Selected as ZIP
