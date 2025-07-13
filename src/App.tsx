@@ -1,48 +1,99 @@
 import React from 'react';
-import { ToolType } from './types';
-import { Navbar } from './components/layout/Navbar';
+// import { Navbar } from './components/layout/Navbar';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AllTools } from './components/tools/AllTools';
+import { Navbar } from './components/layout/Navbar';
 import { PdfTools } from './components/tools/PdfTools';
 import { ImageTools } from './features/image-to-pdf/components/ImageTools';
 import { SignatureTools } from './components/tools/SignatureTools';
 import { MergeTools } from './components/tools/MergeTools';
-import { useMobileDetection } from './hooks/useMobileDetection';
 import RenameImageTools from './features/rename-image/components/RenameImageTools';
+import SplitPDFTools from './features/split-pdf/components/SplitPDFTools';
 import AnyToImageTools from './features/any-to-gpg/components/AnyToImageTools';
+import CompressTools from './features/compress/components/CompressTools';
+
+import { useMobileDetection } from './hooks/useMobileDetection';
 
 export const App: React.FC = () => {
-  const [activeTool, setActiveTool] = React.useState<ToolType>('home');
   const isMobile = useMobileDetection();
 
-  const renderTool = () => {
-    switch (activeTool) {
-      case 'pdf':
-        return <PdfTools />;
-      case 'image':
-        return <ImageTools isMobile={isMobile} />;
-      case 'signature':
-        return <SignatureTools />;
-      case 'merge':
-        return <MergeTools />;
-      case 'AnyFile':
-        return <AnyToImageTools />;
-      case 'rename-image':
-      return <RenameImageTools />;
-      case 'home':
-      default:
-        return <AllTools setActiveTool={setActiveTool} activeTool={activeTool} />;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
-      <Navbar activeTool={activeTool} setActiveTool={setActiveTool} />
-      <div className="container mx-auto px-4 py-8">
-        {renderTool()}
+    <Router>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <Routes>
+            <Route path="/" element={<AllTools />} />
+            <Route path="/pdf" element={<PdfTools />} />
+            <Route path="/image" element={<ImageTools isMobile={isMobile} />} />
+            <Route path="/signature" element={<SignatureTools />} />
+            <Route path="/merge" element={<MergeTools />} />
+            <Route path="/rename-image" element={<RenameImageTools />} />
+            <Route path="/split-pdf" element={<SplitPDFTools />} />
+            <Route path="/any-to-image" element={<AnyToImageTools />} />
+            <Route path="/compress" element={<CompressTools />} />
+            {/* Optional fallback route */}
+            <Route path="*" element={<AllTools />} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </Router>
   );
 };
+
+
+
+// import React from 'react';
+// import { ToolType } from './types';
+// import { Navbar } from './components/layout/Navbar';
+// import { AllTools } from './components/tools/AllTools';
+// import { PdfTools } from './components/tools/PdfTools';
+// import { ImageTools } from './features/image-to-pdf/components/ImageTools';
+// import { SignatureTools } from './components/tools/SignatureTools';
+// import { MergeTools } from './components/tools/MergeTools';
+// import { useMobileDetection } from './hooks/useMobileDetection';
+// import RenameImageTools from './features/rename-image/components/RenameImageTools';
+// import SplitPDFTools from './features/split-pdf/components/SplitPDFTools';
+// import AnyToImageTools from './features/any-to-gpg/components/AnyToImageTools';
+// import CompressTools from './features/compress/components/CompressTools';
+
+// export const App: React.FC = () => {
+//   const [activeTool, setActiveTool] = React.useState<ToolType>('home');
+//   const isMobile = useMobileDetection();
+
+//   const renderTool = () => {
+//     switch (activeTool) {
+//       case 'pdf':
+//         return <PdfTools />;
+//       case 'image':
+//         return <ImageTools isMobile={isMobile} />;
+//       case 'signature':
+//         return <SignatureTools />;
+//       case 'merge':
+//         return <MergeTools />;
+//       case 'AnyFile':
+//         return <AnyToImageTools />;
+//       case 'split-pdf':
+//         return <SplitPDFTools />;
+//       case 'rename-image':
+//         return <RenameImageTools />;
+//         case 'Compress':
+//           return <CompressTools />
+//       case 'home':
+//         default:
+//           return <AllTools setActiveTool={setActiveTool} activeTool={activeTool} />;
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+//       <Navbar activeTool={activeTool} setActiveTool={setActiveTool} />
+//       <div className="container mx-auto px-4 py-8">
+//         {renderTool()}
+//       </div>
+//     </div>
+//   );
+// };
 
 // import React, { useState, useCallback, useEffect } from 'react';
 // import { Upload, FileImage, FileText, Download, Loader2, CheckCircle, AlertCircle } from 'lucide-react';

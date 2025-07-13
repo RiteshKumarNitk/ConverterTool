@@ -6,6 +6,7 @@ import {
   Layers,
   FilePen,
   Image,
+  FilePieChart,
 } from 'lucide-react';
 import { ToolType } from '../../types';
 import {
@@ -15,6 +16,7 @@ import {
   DropResult,
 } from '@hello-pangea/dnd';
 import { ToolCard } from './../ui/ToolCard';
+import { Link } from 'react-router-dom';
 
 interface AllToolsProps {
   activeTool: ToolType;
@@ -52,9 +54,21 @@ const toolsList: {
     icon: <FilePen className="w-5 h-5 text-indigo-600" />,
   },
   {
+    title: 'Split PDF',
+    description: 'Remove prefixes or batch rename images automatically.',
+    toolKey: 'split-pdf',
+    icon: <FilePieChart className="w-5 h-5 text-indigo-600" />,
+  },
+  {
     title: 'Merge PDFs',
     description: 'Combine multiple PDFs into a single organized file.',
     toolKey: 'merge',
+    icon: <Layers className="w-5 h-5 text-yellow-600" />,
+  },
+  {
+    title: 'Compress',
+    description: 'Combine multiple PDFs into a single organized file.',
+    toolKey: 'Compress',
     icon: <Layers className="w-5 h-5 text-yellow-600" />,
   },
   {
@@ -107,14 +121,15 @@ export const AllTools: React.FC<AllToolsProps> = ({
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                     >
-                      <ToolCard
-                        icon={tool.icon}
-                        title={tool.title}
-                        description={tool.description}
-                        onClick={() => setActiveTool(tool.toolKey)}
-                        toolKey={tool.toolKey}
-                        active={activeTool === tool.toolKey}
-                      />
+                   <Link to={`/${tool.toolKey}`}>
+                        <ToolCard
+                          icon={tool.icon}
+                          title={tool.title}
+                          description={tool.description}
+                          toolKey={tool.toolKey}
+                          active={false} // or keep this dynamic if needed
+                        />
+                      </Link>
                     </div>
                   )}
                 </Draggable>
