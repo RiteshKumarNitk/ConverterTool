@@ -15,6 +15,7 @@ import CompressTools from './features/compress/components/CompressTools';
 import { useMobileDetection } from './hooks/useMobileDetection';
 import QRCodeGenerator from './features/QRCodeGenerator/components/QRCodeGenerator';
 import FilterDataWithName from './features/AnyToJpeg/components/FilterDataWithName';
+import ImageConverterTools from './features/image-converter/components/ImageConverterTools';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -37,6 +38,7 @@ export const App: React.FC = () => {
             <Route path="/any-to-image" element={<AnyToImageTools />} />
             <Route path="/compress" element={<CompressTools />} />
             <Route path="/FilterImageName" element={<FilterDataWithName />} />
+            <Route path="/ImageConverter" element={ <ImageConverterTools /> } />
             
             {/* Optional fallback route */}
             <Route path="*" element={<AllTools />} />

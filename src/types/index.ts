@@ -4,4 +4,4 @@ export interface ConversionResult {
   type: 'pdf' | 'image';
 }
 
-export type ToolType = 'home' | 'pdf' | 'image' | 'FilterImageName' | 'QRCodeGenerator'| 'signature' |'AnyFile'|'Compress' | 'merge' |'rename-image'| 'split-pdf';
+export type ToolType = 'home' | 'pdf' | 'image' | 'FilterImageName' | 'QRCodeGenerator'| 'signature' |'AnyFile'|'Compress' | 'any-to-image'| 'merge' |'rename-image'| 'ImageConverter'| 'split-pdf';

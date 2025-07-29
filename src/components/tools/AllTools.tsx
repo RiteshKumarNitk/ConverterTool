@@ -8,6 +8,7 @@ import {
   Image,
   FilePieChart,
   QrCode,
+  ImageDown,
 } from "lucide-react";
 import { ToolType } from "../../types";
 import {
@@ -89,6 +90,12 @@ const toolsList: {
     description: "Filter bulk Image Name with input",
     toolKey: "FilterImageName",
     icon: <QrCode className="w-5 h-5 text-purple-600" />,
+  },
+   {
+    title: "Image to any converter",
+    description: "Image to any converter",
+    toolKey: "ImageConverter",
+    icon: <ImageDown className="w-5 h-5 text-blue-600" />,
   },
 ];
 
