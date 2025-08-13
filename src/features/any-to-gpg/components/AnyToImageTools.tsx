@@ -1,13 +1,21 @@
-
-// ✅ src/features/any-to-gpg/components/AnyToImageTools.tsx
 import React, { useState } from 'react';
 import { useAnyFileToImageConverter } from '../hooks/useAnyFileToImageConverter';
-import { Download, FolderDown } from 'lucide-react';
+import { Download, FolderDown, FileDown } from 'lucide-react';
 
 const AnyToImageTools: React.FC = () => {
   const [outputFormat, setOutputFormat] = useState<'jpeg' | 'png'>('jpeg');
-  const { results, isConverting, error, handleFiles, downloadAllAsZip } = useAnyFileToImageConverter();
   const [dragActive, setDragActive] = useState(false);
+  
+  const { 
+    results, 
+    isConverting, 
+    error, 
+    handleFiles, 
+    downloadAllAsZip,
+    downloadAllAsPDF,
+    isGeneratingZip,
+    isGeneratingPDF
+  } = useAnyFileToImageConverter();
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -58,38 +66,58 @@ const AnyToImageTools: React.FC = () => {
       {isConverting && <p className="text-blue-600">Converting files...</p>}
       {error && <p className="text-red-600">{error}</p>}
 
-     {results.length > 0 && (
-  <div className="space-y-4">
-    <h3 className="font-semibold text-gray-700">Download Converted Images</h3>
-    
-    {/* Scrollable List Container */}
-    <div className="max-h-60 overflow-y-auto border rounded-md p-2">
-      <ul className="space-y-2">
-        {results.map((res, index) => (
-          <li key={index} className="flex items-center justify-between">
-            <span className="truncate">{res.fileName}</span>
-            <a
-              href={res.downloadUrl}
-              download={res.fileName}
-              className="text-blue-600 hover:underline flex items-center"
+      {results.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-gray-700">Download Converted Images</h3>
+          
+          <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+            <ul className="space-y-2">
+              {results.map((res, index) => (
+                <li key={index} className="flex items-center justify-between">
+                  <span className="truncate">{res.fileName}</span>
+                  <a
+                    href={res.downloadUrl}
+                    download={res.fileName}
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    <Download className="w-4 h-4 mr-1" /> Download
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={downloadAllAsZip}
+              disabled={isGeneratingZip || isGeneratingPDF}
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
             >
-              <Download className="w-4 h-4 mr-1" /> Download
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    {/* Download All Button */}
-    <button
-      onClick={downloadAllAsZip}
-      className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition mt-2"
-    >
-      <FolderDown className="w-4 h-4 mr-2" /> Download All as ZIP
-    </button>
-  </div>
-)}
-
+              {isGeneratingZip ? (
+                <span>Generating ZIP...</span>
+              ) : (
+                <>
+                  <FolderDown className="w-4 h-4 mr-2" /> Download All as ZIP
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={downloadAllAsPDF}
+              disabled={isGeneratingZip || isGeneratingPDF}
+              className="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50"
+            >
+              {isGeneratingPDF ? (
+                <span>Generating PDF...</span>
+              ) : (
+                <>
+                  <FileDown className="w-4 h-4 mr-2" /> Download as PDF
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
