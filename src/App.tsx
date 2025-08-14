@@ -16,6 +16,7 @@ import { useMobileDetection } from './hooks/useMobileDetection';
 import QRCodeGenerator from './features/QRCodeGenerator/components/QRCodeGenerator';
 import FilterDataWithName from './features/AnyToJpeg/components/FilterDataWithName';
 import ImageConverterTools from './features/image-converter/components/ImageConverterTools';
+import FontConverterTools from './features/fontconverter/components/FontConverterTools';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
             <Route path="/rename-image" element={<RenameImageTools />} />
             <Route path="/split-pdf" element={<SplitPDFTools />} />
             <Route path="/QRCodeGenerator" element={<QRCodeGenerator />} />
+            <Route path = "/fontconverter" element={<FontConverterTools/>}/>
 
             <Route path="/any-to-image" element={<AnyToImageTools />} />
             <Route path="/compress" element={<CompressTools />} />

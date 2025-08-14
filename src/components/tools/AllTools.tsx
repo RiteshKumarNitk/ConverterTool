@@ -97,6 +97,12 @@ const toolsList: {
     toolKey: "ImageConverter",
     icon: <ImageDown className="w-5 h-5 text-blue-600" />,
   },
+     {
+    title: "Hindi Font  converter",
+    description: "Hindi Devlys 010 <=> Mangal/Unicode)",
+    toolKey: "fontconverter",
+    icon: <ImageDown className="w-5 h-5 text-blue-600" />,
+  },
 ];
 
 export const AllTools: React.FC<AllToolsProps> = ({
