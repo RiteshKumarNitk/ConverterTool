@@ -97,6 +97,12 @@ const toolsList: {
     toolKey: "ImageConverter",
     icon: <ImageDown className="w-5 h-5 text-blue-600" />,
   },
+   {
+    title: "PDF Editor Live",
+    description: "Image to any converter",
+    toolKey: "PDFEdit",
+    icon: <ImageDown className="w-5 h-5 text-blue-600" />,
+  },
 ];
 
 export const AllTools: React.FC<AllToolsProps> = ({

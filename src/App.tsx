@@ -1,7 +1,7 @@
 import React from 'react';
 // import { Navbar } from './components/layout/Navbar';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AllTools } from './components/tools/AllTools';
+import  {AllTools}  from './components/tools/AllTools';
 import { Navbar } from './components/layout/Navbar';
 import { PdfTools } from './components/tools/PdfTools';
 import { ImageTools } from './features/image-to-pdf/components/ImageTools';
@@ -16,6 +16,7 @@ import { useMobileDetection } from './hooks/useMobileDetection';
 import QRCodeGenerator from './features/QRCodeGenerator/components/QRCodeGenerator';
 import FilterDataWithName from './features/AnyToJpeg/components/FilterDataWithName';
 import ImageConverterTools from './features/image-converter/components/ImageConverterTools';
+import { PdfEditorPage } from './features/PdfEditorPage/components/PdfEditorPage';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -34,6 +35,8 @@ export const App: React.FC = () => {
             <Route path="/rename-image" element={<RenameImageTools />} />
             <Route path="/split-pdf" element={<SplitPDFTools />} />
             <Route path="/QRCodeGenerator" element={<QRCodeGenerator />} />
+            <Route path='/PDFEdit' element={<PdfEditorPage/>} />
+
 
             <Route path="/any-to-image" element={<AnyToImageTools />} />
             <Route path="/compress" element={<CompressTools />} />
