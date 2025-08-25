@@ -31,79 +31,85 @@ const toolsList: {
   toolKey: ToolType;
   icon: React.ReactNode;
 }[] = [
-  {
-    title: "Image to PDF",
-    description: "Convert JPG, PNG images into a single PDF document.",
-    toolKey: "pdf",
-    icon: <FileImage className="w-5 h-5 text-blue-600" />,
-  },
-  {
-    title: "PDF to Image",
-    description: "Extract images from PDF pages in PNG/JPG format.",
-    toolKey: "image",
-    icon: <FileText className="w-5 h-5 text-green-600" />,
-  },
-  {
-    title: "E-Signatures",
-    description: "Sign your PDFs or request others to sign securely.",
-    toolKey: "signature",
-    icon: <PenTool className="w-5 h-5 text-red-600" />,
-  },
-  {
-    title: "Rename Image Files",
-    description: "Remove prefixes or batch rename images automatically.",
-    toolKey: "rename-image",
-    icon: <FilePen className="w-5 h-5 text-indigo-600" />,
-  },
-  {
-    title: "Split PDF",
-    description: "Remove prefixes or batch rename images automatically.",
-    toolKey: "split-pdf",
-    icon: <FilePieChart className="w-5 h-5 text-indigo-600" />,
-  },
-  {
-    title: "Merge PDFs",
-    description: "Combine multiple PDFs into a single organized file.",
-    toolKey: "merge",
-    icon: <Layers className="w-5 h-5 text-yellow-600" />,
-  },
-  {
-    title: "Compress",
-    description: "Combine multiple PDFs into a single organized file.",
-    toolKey: "Compress",
-    icon: <Layers className="w-5 h-5 text-yellow-600" />,
-  },
-  {
-    title: "any-to-image",
-    description: "Convert image and PDF Builk Data into PNG or JPG images.",
-    toolKey: "any-to-image",
-    icon: <Image className="w-5 h-5 text-purple-600" />,
-  },
-  {
-    title: "QR Code Generator",
-    description: "Convert image and PDF Builk Data into PNG or JPG images.",
-    toolKey: "QRCodeGenerator",
-    icon: <QrCode className="w-5 h-5 text-purple-600" />,
-  },
     {
-    title: "Filter bulk Image Name with input",
-    description: "Filter bulk Image Name with input",
-    toolKey: "FilterImageName",
-    icon: <QrCode className="w-5 h-5 text-purple-600" />,
-  },
-   {
-    title: "Image to any converter",
-    description: "Image to any converter",
-    toolKey: "ImageConverter",
-    icon: <ImageDown className="w-5 h-5 text-blue-600" />,
-  },
-   {
-    title: "PDF Editor Live",
-    description: "Image to any converter",
-    toolKey: "PDFEdit",
-    icon: <ImageDown className="w-5 h-5 text-blue-600" />,
-  },
-];
+      title: "Image to PDF",
+      description: "Convert JPG, PNG images into a single PDF document.",
+      toolKey: "pdf",
+      icon: <FileImage className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      title: "PDF to Image",
+      description: "Extract images from PDF pages in PNG/JPG format.",
+      toolKey: "image",
+      icon: <FileText className="w-5 h-5 text-green-600" />,
+    },
+    {
+      title: "E-Signatures",
+      description: "Sign your PDFs or request others to sign securely.",
+      toolKey: "signature",
+      icon: <PenTool className="w-5 h-5 text-red-600" />,
+    },
+    {
+      title: "Rename Image Files",
+      description: "Remove prefixes or batch rename images automatically.",
+      toolKey: "rename-image",
+      icon: <FilePen className="w-5 h-5 text-indigo-600" />,
+    },
+    {
+      title: "Split PDF",
+      description: "Remove prefixes or batch rename images automatically.",
+      toolKey: "split-pdf",
+      icon: <FilePieChart className="w-5 h-5 text-indigo-600" />,
+    },
+    {
+      title: "Merge PDFs",
+      description: "Combine multiple PDFs into a single organized file.",
+      toolKey: "merge",
+      icon: <Layers className="w-5 h-5 text-yellow-600" />,
+    },
+    {
+      title: "Compress",
+      description: "Combine multiple PDFs into a single organized file.",
+      toolKey: "Compress",
+      icon: <Layers className="w-5 h-5 text-yellow-600" />,
+    },
+    {
+      title: "any-to-image",
+      description: "Convert image and PDF Builk Data into PNG or JPG images.",
+      toolKey: "any-to-image",
+      icon: <Image className="w-5 h-5 text-purple-600" />,
+    },
+    {
+      title: "QR Code Generator",
+      description: "Convert image and PDF Builk Data into PNG or JPG images.",
+      toolKey: "QRCodeGenerator",
+      icon: <QrCode className="w-5 h-5 text-purple-600" />,
+    },
+    {
+      title: "Filter bulk Image Name with input",
+      description: "Filter bulk Image Name with input",
+      toolKey: "FilterImageName",
+      icon: <QrCode className="w-5 h-5 text-purple-600" />,
+    },
+    {
+      title: "Image to any converter",
+      description: "Image to any converter",
+      toolKey: "ImageConverter",
+      icon: <ImageDown className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      title: "PDF Editor Live",
+      description: "Image to any converter",
+      toolKey: "PDFEdit",
+      icon: <ImageDown className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      title: "Hindi Font  converter",
+      description: "Hindi Devlys 010 <=> Mangal/Unicode)",
+      toolKey: "fontconverter",
+      icon: <ImageDown className="w-5 h-5 text-blue-600" />,
+    },
+  ];
 
 export const AllTools: React.FC<AllToolsProps> = ({
   activeTool,
