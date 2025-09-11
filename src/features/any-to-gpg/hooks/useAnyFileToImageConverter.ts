@@ -25,7 +25,7 @@ export const useAnyFileToImageConverter = () => {
     };
   }, []);
 
-  const handleFiles = async (files: File[], outputFormat: 'jpeg' | 'png' | 'pdf') => {
+  const handleFiles = async (files: File[], outputFormat: 'jpg' | 'jpeg' | 'png' | 'pdf') => {
     // Clear previous results and errors
     setResults(prev => {
       prev.forEach(r => URL.revokeObjectURL(r.downloadUrl));
@@ -57,6 +57,9 @@ export const useAnyFileToImageConverter = () => {
     try {
       const newResults: ConversionResult[] = [];
       
+      // Normalize jpg to jpeg for internal processing
+      const internalFormat = outputFormat === 'jpg' ? 'jpeg' : outputFormat;
+      
       // Process files sequentially to avoid memory issues
       for (const file of files) {
         try {
@@ -64,7 +67,7 @@ export const useAnyFileToImageConverter = () => {
           
           // PDF file handling
           if (ext === 'pdf') {
-            if (outputFormat === 'pdf') {
+            if (internalFormat === 'pdf') {
               // Keep PDF as is
               newResults.push({
                 fileName: file.name,
@@ -87,7 +90,7 @@ export const useAnyFileToImageConverter = () => {
 
                 await page.render({ canvasContext: context, viewport }).promise;
                 const blob = await new Promise<Blob>(resolve => 
-                  canvas.toBlob(blob => resolve(blob!), `image/${outputFormat}`, 0.9));
+                  canvas.toBlob(blob => resolve(blob!), `image/${internalFormat}`, 0.9));
                 
                 newResults.push({
                   fileName: `${file.name.replace(/\.[^/.]+$/, '')}_page_${i}.${outputFormat}`,
@@ -100,7 +103,7 @@ export const useAnyFileToImageConverter = () => {
           } 
           // Image file handling
           else if (['png', 'jpg', 'jpeg'].includes(ext)) {
-            if (outputFormat === 'pdf') {
+            if (internalFormat === 'pdf') {
               // Convert image to PDF
               const pdfDoc = await PDFDocument.create();
               const imageBytes = await file.arrayBuffer();
@@ -136,7 +139,7 @@ export const useAnyFileToImageConverter = () => {
               ctx.drawImage(img, 0, 0);
               
               const blob = await new Promise<Blob>(resolve => 
-                canvas.toBlob(blob => resolve(blob!), `image/${outputFormat}`, 0.9));
+                canvas.toBlob(blob => resolve(blob!), `image/${internalFormat}`, 0.9));
               
               newResults.push({
                 fileName: `${file.name.replace(/\.[^/.]+$/, '')}.${outputFormat}`,

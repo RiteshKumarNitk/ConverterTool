@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAnyFileToImageConverter } from '../hooks/useAnyFileToImageConverter';
-import { Download, FolderDown, FileDown, Upload, File, Image, FileText, ChevronDown } from 'lucide-react';
+import { Download, FolderDown, FileDown, Upload, File, Image, FileText, ChevronDown, AlertCircle } from 'lucide-react';
 
 const AnyToImageTools: React.FC = () => {
   // State for UI controls
@@ -40,6 +40,7 @@ const AnyToImageTools: React.FC = () => {
 
   // Format selection with icons
   const formatOptions = [
+     { value: 'jpg', label: 'JPG', icon: <Image className="w-4 h-4" /> },
     { value: 'jpeg', label: 'JPEG', icon: <Image className="w-4 h-4" /> },
     { value: 'png', label: 'PNG', icon: <Image className="w-4 h-4" /> },
     { value: 'pdf', label: 'PDF', icon: <FileText className="w-4 h-4" /> }
