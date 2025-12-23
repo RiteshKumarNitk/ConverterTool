@@ -24,6 +24,7 @@
     "react-dom": "^18.3.1",
     "react-pdf": "^10.1.0",
     "react-router-dom": "^7.6.3",
+    "remixicon": "^4.7.0",
     "signature_pad": "^5.0.10"
   },
   "devDependencies": {

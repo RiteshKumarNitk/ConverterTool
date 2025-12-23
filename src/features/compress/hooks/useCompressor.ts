@@ -1,11 +1,17 @@
 import { useState } from "react";
 import JSZip from "jszip";
+import { convertPDFToImages, mergeImagesToPDF } from "../../../utils/fileConverter";
+
+export type CompressionLevel = 'low' | 'medium' | 'high';
 
 export const useCompressor = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [compressedFiles, setCompressedFiles] = useState<Blob[]>([]);
   const [loading, setLoading] = useState(false);
-  const [targetSizeMB, setTargetSizeMB] = useState<number>(1);
+  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('medium');
+
+  const [progress, setProgress] = useState<string>("");
+  const [timeTaken, setTimeTaken] = useState<string | null>(null);
 
   const handleFileUpload = (inputFiles: FileList | File[]) => {
     const list = Array.from(inputFiles);
@@ -16,71 +22,105 @@ export const useCompressor = () => {
   const reset = () => {
     setFiles([]);
     setCompressedFiles([]);
+    setProgress("");
+    setTimeTaken(null);
   };
 
   const handleCompression = async () => {
     setLoading(true);
+    setProgress("Starting...");
+    setTimeTaken(null);
+    const startTime = performance.now();
     const results: Blob[] = [];
+
+    // Settings map
+    const settings = {
+      low: { scale: 0.8, quality: 0.3 },     // Smallest size, lowest resolution
+      medium: { scale: 1.0, quality: 0.6 },  // Balanced (72 DPI)
+      high: { scale: 1.5, quality: 0.8 }     // Best quality (Higher DPI)
+    };
+    const { scale, quality } = settings[compressionLevel];
 
     for (const file of files) {
       if (file.type === "application/pdf") {
-        // Placeholder (real compression would be backend)
-        results.push(file);
+        try {
+          setProgress(`Reading PDF: ${file.name}...`);
+          // 1. Convert PDF pages to images
+          const pageBlobs = await convertPDFToImages(file, scale);
+
+          setProgress(`Compressing ${file.name} (Pages: ${pageBlobs.length})...`);
+
+          // 2. Compress each page image (Parallel)
+          const compressedBlobs = await Promise.all(pageBlobs.map((blob, i) => {
+            const pageFile = new File([blob], `page_${i}.png`, { type: "image/png" });
+            return compressImageFixed(pageFile, quality);
+          }));
+
+          const compressedPages = compressedBlobs.map((blob, i) =>
+            new File([blob], `page_${i}.jpg`, { type: "image/jpeg" })
+          );
+
+          setProgress(`Merging ${file.name}...`);
+          // 3. Merge compressed images back to PDF
+          const compressedPdfBlob = await mergeImagesToPDF(compressedPages);
+
+          // 4. Size Check: Keep whichever is smaller (unless forced low quality)
+          if (compressedPdfBlob.size < file.size) {
+            results.push(compressedPdfBlob);
+          } else {
+            // If we failed to reduce size, but user asked for "High", maybe that's expected?
+            // But usually they want compression. 
+            console.warn("Compressed file larger than original, checking if meaningful...");
+            results.push(file);
+          }
+
+        } catch (err) {
+          console.error("PDF Compression failed", err);
+          results.push(file);
+        }
       } else if (file.type.startsWith("image/")) {
-        const targetBytes = targetSizeMB * 1024 * 1024;
-        const image = await compressImageToSize(file, targetBytes);
-        results.push(image);
+        setProgress(`Compressing image: ${file.name}...`);
+        const image = await compressImageFixed(file, quality);
+        results.push(image.size < file.size ? image : file);
       } else {
         results.push(file);
       }
     }
 
     setCompressedFiles(results);
+    const endTime = performance.now();
+    setTimeTaken(((endTime - startTime) / 1000).toFixed(2) + "s");
     setLoading(false);
+    setProgress("");
   };
-const compressImageToSize = (file: File, targetBytes: number): Promise<Blob> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
+
+  // Fast fixed quality compression (One pass)
+  const compressImageFixed = (file: File, quality: number): Promise<Blob> => {
+    return new Promise((resolve) => {
       const img = new Image();
-      img.src = e.target?.result as string;
+      const url = URL.createObjectURL(file);
 
       img.onload = () => {
         const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
         const ctx = canvas.getContext("2d")!;
-        let width = img.width;
-        let height = img.height;
+        ctx.drawImage(img, 0, 0);
 
-        // Shrink loop until size is under targetBytes
-        let quality = 0.92;
-
-        const tryCompress = () => {
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob((blob) => {
-            if (!blob) return;
-
-            if (blob.size <= targetBytes || (quality <= 0.3 && width < 500)) {
-              resolve(blob);
-            } else {
-              // Shrink and lower quality
-              width = Math.floor(width * 0.9);
-              height = Math.floor(height * 0.9);
-              quality -= 0.05;
-              tryCompress();
-            }
-          }, file.type, quality);
-        };
-
-        tryCompress();
+        canvas.toBlob((blob) => {
+          resolve(blob || file);
+          URL.revokeObjectURL(url);
+        }, 'image/jpeg', quality);
       };
-    };
-  });
-};
 
+      img.onerror = () => {
+        resolve(file);
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+    });
+  };
 
   const downloadZip = async () => {
     const zip = new JSZip();
@@ -103,7 +143,9 @@ const compressImageToSize = (file: File, targetBytes: number): Promise<Blob> => 
     handleCompression,
     downloadZip,
     reset,
-    targetSizeMB,
-    setTargetSizeMB,
+    compressionLevel,
+    setCompressionLevel,
+    progress,
+    timeTaken,
   };
 };

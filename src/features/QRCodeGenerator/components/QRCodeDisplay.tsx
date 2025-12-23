@@ -1,74 +1,106 @@
-import React from "react";
+import React, { useRef } from "react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
+import { ErrorCorrectionLevel } from "../hooks/useQRCode";
 
 interface Props {
-  text: string;
+  value: string;
   size: number;
   bgColor: string;
   fgColor: string;
-  padding: number;
   logo: string | null;
+  errorLevel: ErrorCorrectionLevel;
+  includeMargin: boolean;
 }
 
-export const QRCodeDisplay: React.FC<Props> = ({ text, size, bgColor, fgColor, padding, logo }) => {
+export const QRCodeDisplay: React.FC<Props> = ({
+  value, size, bgColor, fgColor, logo, errorLevel, includeMargin
+}) => {
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPNG = () => {
-    const canvas = document.getElementById("qr-canvas") as HTMLCanvasElement;
-    const newCanvas = document.createElement("canvas");
-    const ctx = newCanvas.getContext("2d")!;
-    const totalSize = size + padding * 2;
-
-    newCanvas.width = totalSize;
-    newCanvas.height = totalSize;
-
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, totalSize, totalSize);
-    ctx.drawImage(canvas, padding, padding, size, size);
-
-    if (logo) {
-      const img = new Image();
-      img.src = logo;
-      img.onload = () => {
-        const logoSize = size / 4;
-        ctx.drawImage(img, totalSize / 2 - logoSize / 2, totalSize / 2 - logoSize / 2, logoSize, logoSize);
-        triggerDownload(newCanvas);
-      };
-    } else {
-      triggerDownload(newCanvas);
+  const downloadQRCode = () => {
+    const canvas = document.getElementById('qr-code-main') as HTMLCanvasElement;
+    if (canvas) {
+      const url = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.download = `qrcode-${Date.now()}.png`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
-  const triggerDownload = (canvas: HTMLCanvasElement) => {
-    const url = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "qrcode.png";
-    link.click();
+  const downloadSVG = () => {
+    const svg = document.getElementById('qr-code-svg');
+    if (svg) {
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+      const link = document.createElement('a');
+      link.download = `qrcode-${Date.now()}.svg`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
-  const handleDownloadSVG = () => {
-    const svg = document.getElementById("qr-svg") as SVGElement;
-    const serializer = new XMLSerializer();
-    const svgBlob = new Blob([serializer.serializeToString(svg)], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(svgBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "qrcode.svg";
-    link.click();
-  };
+  const imageSettings = logo ? {
+    src: logo,
+    height: size * 0.18,
+    width: size * 0.18,
+    excavate: true,
+  } : undefined;
 
-  if (!text) return null;
+  if (!value) return null;
 
   return (
-    <div className="text-center">
-      <div className="bg-gray-100 p-4 rounded mb-4 inline-block">
-        <QRCodeCanvas id="qr-canvas" value={text} size={size} bgColor={bgColor} fgColor={fgColor} />
-        <QRCodeSVG id="qr-svg" value={text} size={size} bgColor={bgColor} fgColor={fgColor} style={{ display: "none" }} />
+    <div className="flex flex-col items-center">
+      <div className="bg-white p-4 rounded-xl shadow-md border border-gray-200 mb-6 flex justify-center items-center overflow-hidden w-full max-w-sm aspect-square" ref={qrContainerRef}>
+        <QRCodeCanvas
+          id="qr-code-main"
+          value={value}
+          size={size}
+          bgColor={bgColor}
+          fgColor={fgColor}
+          level={errorLevel}
+          includeMargin={includeMargin}
+          imageSettings={imageSettings}
+          style={{ maxWidth: '100%', height: 'auto', maxHeight: '100%' }}
+        />
       </div>
-      <div className="flex justify-center gap-4">
-        <button onClick={handleDownloadPNG} className="bg-blue-600 text-white px-4 py-2 rounded">Download PNG</button>
-        <button onClick={handleDownloadSVG} className="bg-green-600 text-white px-4 py-2 rounded">Download SVG</button>
+
+      {/* Hidden SVG for Export */}
+      <div style={{ display: 'none' }}>
+        <QRCodeSVG
+          id="qr-code-svg"
+          value={value}
+          size={size}
+          bgColor={bgColor}
+          fgColor={fgColor}
+          level={errorLevel}
+          includeMargin={includeMargin}
+          imageSettings={imageSettings}
+        />
       </div>
+
+      <div className="w-full flex gap-3">
+        <button
+          onClick={downloadQRCode}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold shadow-md transition-all flex justify-center items-center gap-2"
+        >
+          <span>PNG</span>
+        </button>
+        <button
+          onClick={downloadSVG}
+          className="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-lg font-semibold shadow-md transition-all flex justify-center items-center gap-2"
+        >
+          <span>SVG</span>
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-center text-gray-500">
+        Generated at {size}x{size}px
+      </p>
     </div>
   );
 };

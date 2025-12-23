@@ -10,8 +10,10 @@ const CompressTools = () => {
     downloadZip,
     reset,
     loading,
-    targetSizeMB,
-    setTargetSizeMB,
+    compressionLevel,
+    setCompressionLevel,
+    progress,
+    timeTaken
   } = useCompressor();
 
   const fileDropRef = useRef<HTMLDivElement>(null);
@@ -48,32 +50,46 @@ const CompressTools = () => {
         </label>
       </div>
 
-      {/* Target size input */}
-      <div className="mb-4">
-        <label className="block font-medium text-sm text-gray-700 mb-1">
-          Target Size (MB):
+      {/* Compression Level Selection */}
+      <div className="mb-6">
+        <label className="block font-medium text-sm text-gray-700 mb-2">
+          Compression Mode:
         </label>
-        <input
-          type="number"
-          value={targetSizeMB}
-          onChange={(e) => setTargetSizeMB(parseFloat(e.target.value))}
-          min={0.1}
-          max={10}
-          step={0.1}
-          className="w-32 border p-2 rounded-md text-sm"
-        />
+        <div className="flex space-x-4">
+          {(['low', 'medium', 'high'] as const).map((level) => (
+            <button
+              key={level}
+              onClick={() => setCompressionLevel(level)}
+              className={`flex-1 py-3 px-4 rounded-lg capitalize font-medium border-2 transition-all ${compressionLevel === level
+                ? 'border-blue-600 bg-blue-50 text-blue-700'
+                : 'border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              {level}
+              <span className="block text-xs text-gray-500 font-normal mt-1">
+                {level === 'low' ? 'Smallest File' : level === 'medium' ? 'Standard' : 'High Quality'}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Progress Indicator */}
+      {loading && progress && (
+        <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm font-medium animate-pulse text-center">
+          {progress}
+        </div>
+      )}
+
       {/* Buttons */}
-      <div className="flex space-x-4 mb-6">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         <button
           onClick={handleCompression}
           disabled={loading || files.length === 0}
-          className={`py-2 px-4 rounded font-semibold text-white ${
-            loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-          }`}
+          className={`py-2 px-4 rounded font-semibold text-white ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
         >
-          {loading ? "Compressing..." : "Compress"}
+          {loading ? "Processing..." : "Compress Files"}
         </button>
         {compressedFiles.length > 0 && (
           <button
@@ -89,6 +105,12 @@ const CompressTools = () => {
         >
           Clear
         </button>
+
+        {timeTaken && (
+          <span className="text-gray-500 text-sm font-medium ml-auto">
+            Finished in: {timeTaken}
+          </span>
+        )}
       </div>
 
       {/* Size comparison */}
@@ -97,11 +119,12 @@ const CompressTools = () => {
           <h3 className="text-lg font-semibold mb-2">File Size Comparison:</h3>
           <ul className="text-sm space-y-2">
             {files.map((file, idx) => (
-              <li key={idx} className="flex justify-between">
+              <li key={idx} className="flex justify-between border-b pb-1">
                 <span>{file.name}</span>
-                <span>
+                <span className={compressedFiles[idx].size < file.size ? "text-green-600 font-bold" : "text-gray-600"}>
                   {(file.size / 1024 / 1024).toFixed(2)} MB →{" "}
                   {(compressedFiles[idx].size / 1024 / 1024).toFixed(2)} MB
+                  {compressedFiles[idx].size >= file.size && " (No reduction)"}
                 </span>
               </li>
             ))}

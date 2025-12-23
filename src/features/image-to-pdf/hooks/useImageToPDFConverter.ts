@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { convertImageToPDF } from '../../../utils/fileConverter';
+import { convertImageToPDF, mergeImagesToPDF } from '../../../utils/fileConverter';
 import { ConversionResult } from './../../../types/index';
 
 export const useImageToPDFConverter = () => {
@@ -48,6 +48,24 @@ export const useImageToPDFConverter = () => {
 
         current += 1;
         setProgress({ current, total });
+      }
+
+      // If multiple images were uploaded, create a merged PDF version
+      if (images.length > 1) {
+        try {
+          const mergedBlob = await mergeImagesToPDF(images);
+          const downloadUrl = URL.createObjectURL(mergedBlob);
+
+          // Add merged result at the beginning
+          newResults.unshift({
+            fileName: `Merged_Images_${Date.now()}.pdf`,
+            downloadUrl,
+            type: 'pdf'
+          });
+        } catch (mergeErr) {
+          console.error("Merge failed", mergeErr);
+          setWarning(prev => (prev ? prev + " " : "") + "Failed to create merged PDF.");
+        }
       }
 
       setResults(newResults);
