@@ -2,13 +2,17 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePdfEditor } from '../hooks/usePdfEditor';
-import Button from "../common/Button";
-import { Alert } from '../../../components/ui/Alert';
-import { FileDropzone } from '../common/FileDropzone';
+import { Button } from '../../../components/ui/Button';
+import { ToolLayout } from '../../../components/layout/ToolLayout';
+import { FileDropzone } from '../../../components/common/FileDropzone';
+import { AlertCircle, MousePointer, Type, Square, Image as ImageIcon, PenTool, ZoomIn, ZoomOut, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-// Configure PDF worker - CDN approach to avoid local bundle issues
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
+// Configure PDF worker
+// @ts-ignore
+const pdfjsLib = pdfjs;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 interface TextAnnotation {
     id: string;
@@ -44,11 +48,11 @@ export const PdfEditorPage: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [numPages, setNumPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [scale, setScale] = useState<number>(1.2);
+    const [scale, setScale] = useState<number>(1.0);
     const [textAnnotations, setTextAnnotations] = useState<TextAnnotation[]>([]);
     const [imageAnnotations, setImageAnnotations] = useState<ImageAnnotation[]>([]);
     const [drawingAnnotations, setDrawingAnnotations] = useState<DrawingAnnotation[]>([]);
-    const [activeTool, setActiveTool] = useState<'select' | 'text' | 'image' | 'draw' | 'signature' | null>(null);
+    const [activeTool, setActiveTool] = useState<'select' | 'text' | 'image' | 'draw' | 'signature' | null>('select');
     const [drawingType, setDrawingType] = useState<'line' | 'rectangle' | 'circle' | 'arrow'>('rectangle');
     const [currentColor, setCurrentColor] = useState<string>('#000000');
     const [fontSize, setFontSize] = useState<number>(12);
@@ -56,6 +60,7 @@ export const PdfEditorPage: React.FC = () => {
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
     const [currentDrawing, setCurrentDrawing] = useState<DrawingAnnotation | null>(null);
     const pageRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
 
     const { saveEditedPdf, isLoading } = usePdfEditor();
 
@@ -69,7 +74,11 @@ export const PdfEditorPage: React.FC = () => {
         setPdfError('Failed to load the PDF file. Please try another file.');
     }
 
-    const handleFileAccepted = (acceptedFile: File) => {
+    const processFile = (acceptedFile: File) => {
+        if (acceptedFile.type !== 'application/pdf') {
+            alert('Please select a PDF file');
+            return;
+        }
         setFile(acceptedFile);
 
         const reader = new FileReader();
@@ -80,12 +89,34 @@ export const PdfEditorPage: React.FC = () => {
         };
         reader.readAsArrayBuffer(acceptedFile);
 
-        // reset annotations
         setTextAnnotations([]);
         setImageAnnotations([]);
         setDrawingAnnotations([]);
         setCurrentPage(1);
     };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const droppedFile = e.dataTransfer.files?.[0];
+        if (droppedFile) processFile(droppedFile);
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (selectedFile) processFile(selectedFile);
+    };
+
 
     const addTextAnnotation = (e: React.MouseEvent<HTMLDivElement>) => {
         if (activeTool !== 'text' || !pageRef.current) return;
@@ -167,7 +198,6 @@ export const PdfEditorPage: React.FC = () => {
                 drawingAnnotations
             );
 
-            // Download the edited file
             const url = URL.createObjectURL(editedFile);
             const a = document.createElement('a');
             a.href = url;
@@ -176,8 +206,6 @@ export const PdfEditorPage: React.FC = () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-
-            alert('PDF edited successfully!');
         } catch (error) {
             console.error('Error saving PDF:', error);
             alert('Failed to save the edited PDF. Please try again.');
@@ -185,195 +213,168 @@ export const PdfEditorPage: React.FC = () => {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <header className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">PDF Editor</h1>
-                <p className="text-gray-600">Edit your PDF documents with our easy-to-use tools</p>
-            </header>
-
+        <ToolLayout
+            title="PDF Editor"
+            description="Edit your PDF documents directly in your browser. Add text, shapes, and annotations securely."
+            icon={<PenTool className="w-10 h-10 text-blue-600" />}
+        >
             {!file ? (
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-3xl mx-auto py-12">
                     <FileDropzone
-                        onFileAccepted={handleFileAccepted}
-                        acceptedFileTypes={['application/pdf']}
-                        maxFileSize={25 * 1024 * 1024} // 25MB
+                        isDragging={isDragging}
+                        isConverting={false}
+                        progress={null}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onFileInput={handleFileInput}
+                        mode="pdf-to-image" // Reusing styling
                     />
                 </div>
             ) : (
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 p-4 border-b border-gray-200 flex flex-wrap gap-4 items-center">
-                        <div className="tool-section">
-                            <h3 className="text-sm font-medium text-gray-700 mb-1">Tools</h3>
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    variant={activeTool === 'select' ? 'primary' : 'outline'}
-                                    size="sm"
-                                    onClick={() => setActiveTool('select')}
-                                >
-                                    Select
-                                </Button>
-                                <Button
-                                    variant={activeTool === 'text' ? 'primary' : 'outline'}
-                                    size="sm"
-                                    onClick={() => setActiveTool('text')}
-                                >
-                                    Add Text
-                                </Button>
-                                <Button
-                                    variant={activeTool === 'draw' ? 'primary' : 'outline'}
-                                    size="sm"
-                                    onClick={() => setActiveTool('draw')}
-                                >
-                                    Draw
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setActiveTool('image')}
-                                    disabled
-                                >
-                                    Add Image
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setActiveTool('signature')}
-                                    disabled
-                                >
-                                    Add Signature
-                                </Button>
-                            </div>
-                        </div>
+                <div className="flex flex-col h-[80vh] bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
 
-                        {activeTool === 'text' && (
-                            <div className="flex items-center gap-4">
-                                <label className="flex flex-col">
-                                    <span className="text-xs text-gray-600">Font Size</span>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="range"
-                                            min="8"
-                                            max="72"
-                                            value={fontSize}
-                                            onChange={(e) => setFontSize(Number(e.target.value))}
-                                            className="w-20"
-                                        />
-                                        <span className="text-sm">{fontSize}px</span>
-                                    </div>
-                                </label>
-                                <label className="flex flex-col">
-                                    <span className="text-xs text-gray-600">Color</span>
-                                    <input
-                                        type="color"
-                                        value={currentColor}
-                                        onChange={(e) => setCurrentColor(e.target.value)}
-                                        className="w-8 h-8"
-                                    />
-                                </label>
-                            </div>
-                        )}
+                    {/* Toolbar */}
+                    <div className="bg-white border-b border-gray-200 p-2 shadow-sm flex items-center gap-2 overflow-x-auto">
 
-                        {activeTool === 'draw' && (
-                            <div className="flex items-center gap-4">
-                                <label className="flex flex-col">
-                                    <span className="text-xs text-gray-600">Shape</span>
-                                    <select
-                                        value={drawingType}
-                                        onChange={(e) => setDrawingType(e.target.value as any)}
-                                        className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                    >
-                                        <option value="rectangle">Rectangle</option>
-                                        <option value="circle">Circle</option>
-                                        <option value="line">Line</option>
-                                        <option value="arrow">Arrow</option>
-                                    </select>
-                                </label>
-                                <label className="flex flex-col">
-                                    <span className="text-xs text-gray-600">Color</span>
-                                    <input
-                                        type="color"
-                                        value={currentColor}
-                                        onChange={(e) => setCurrentColor(e.target.value)}
-                                        className="w-8 h-8"
-                                    />
-                                </label>
-                            </div>
-                        )}
-
-                        <div className="flex items-center gap-4 ml-auto">
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={currentPage <= 1}
-                                    onClick={() => setCurrentPage(prev => prev - 1)}
-                                >
-                                    Previous
-                                </Button>
-                                <span className="text-sm font-medium text-gray-700">
-                                    Page {currentPage} of {numPages}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={currentPage >= numPages}
-                                    onClick={() => setCurrentPage(prev => prev + 1)}
-                                >
-                                    Next
-                                </Button>
-                            </div>
-
-                            <label className="flex flex-col">
-                                <span className="text-xs text-gray-600">Zoom</span>
-                                <select
-                                    value={scale}
-                                    onChange={(e) => setScale(Number(e.target.value))}
-                                    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                >
-                                    <option value="0.5">50%</option>
-                                    <option value="0.75">75%</option>
-                                    <option value="1">100%</option>
-                                    <option value="1.2">120%</option>
-                                    <option value="1.5">150%</option>
-                                    <option value="2">200%</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => {
-                                setFile(null);
-                                setPdfData(null);
-                            }}>
-                                Close
+                        <div className="flex bg-gray-100 rounded-lg p-1">
+                            <Button
+                                variant={activeTool === 'select' ? 'primary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setActiveTool('select')}
+                                title="Select"
+                            >
+                                <MousePointer className="w-4 h-4" />
                             </Button>
                             <Button
-                                variant="primary"
+                                variant={activeTool === 'text' ? 'primary' : 'ghost'}
                                 size="sm"
-                                onClick={handleSave}
-                                loading={isLoading}
+                                onClick={() => setActiveTool('text')}
+                                title="Add Text"
                             >
-                                Save Changes
+                                <Type className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                variant={activeTool === 'draw' ? 'primary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setActiveTool('draw')}
+                                title="Draw Shape"
+                            >
+                                <Square className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" disabled title="Add Image (Coming Soon)">
+                                <ImageIcon className="w-4 h-4 opacity-50" />
                             </Button>
                         </div>
+
+                        <div className="h-6 w-px bg-gray-300 mx-1"></div>
+
+                        {/* Text Properties */}
+                        {activeTool === 'text' && (
+                            <div className="flex items-center gap-2 animate-in fade-in">
+                                <input
+                                    type="number"
+                                    min="8"
+                                    max="72"
+                                    value={fontSize}
+                                    onChange={(e) => setFontSize(Number(e.target.value))}
+                                    className="w-16 px-2 py-1 rounded border border-gray-300 text-sm"
+                                    title="Font Size"
+                                />
+                                <input
+                                    type="color"
+                                    value={currentColor}
+                                    onChange={(e) => setCurrentColor(e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                    title="Text Color"
+                                />
+                            </div>
+                        )}
+
+                        {/* Draw Properties */}
+                        {activeTool === 'draw' && (
+                            <div className="flex items-center gap-2 animate-in fade-in">
+                                <select
+                                    value={drawingType}
+                                    onChange={(e) => setDrawingType(e.target.value as any)}
+                                    className="rounded border border-gray-300 py-1 text-sm bg-white"
+                                >
+                                    <option value="rectangle">Rectangle</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="line">Line</option>
+                                    <option value="arrow">Arrow</option>
+                                </select>
+                                <input
+                                    type="color"
+                                    value={currentColor}
+                                    onChange={(e) => setCurrentColor(e.target.value)}
+                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                    title="Shape Color"
+                                />
+                            </div>
+                        )}
+
+                        <div className="flex-1"></div>
+
+                        {/* Zoom & Page Controls */}
+                        <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => setScale(Math.max(0.5, scale - 0.25))}><ZoomOut className="w-4 h-4" /></Button>
+                            <span className="text-xs font-mono w-12 text-center">{Math.round(scale * 100)}%</span>
+                            <Button size="sm" variant="ghost" onClick={() => setScale(Math.min(2.5, scale + 0.25))}><ZoomIn className="w-4 h-4" /></Button>
+                        </div>
+
+                        <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                            <Button size="sm" variant="ghost" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <span className="text-xs font-mono px-2">
+                                {currentPage} / {numPages || '-'}
+                            </span>
+                            <Button size="sm" variant="ghost" disabled={currentPage >= numPages} onClick={() => setCurrentPage(p => p + 1)}>
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        <div className="h-6 w-px bg-gray-300 mx-1"></div>
+
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => { setFile(null); setPdfData(null); }}
+                            className="bg-red-100 text-red-700 hover:bg-red-200"
+                        >
+                            <X className="w-4 h-4 mr-1" /> Close
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleSave}
+                            loading={isLoading}
+                        >
+                            <Save className="w-4 h-4 mr-1" /> Save
+                        </Button>
+
                     </div>
 
+                    {/* Error Message */}
                     {pdfError && (
-                        <Alert type="error" className="m-4">
-                            {pdfError}
-                        </Alert>
+                        <div className="bg-red-50 text-red-700 p-2 text-center text-sm border-b border-red-100 flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 mr-2" /> {pdfError}
+                        </div>
                     )}
 
-                    <div className="bg-gray-800 p-8 flex justify-center overflow-auto">
+                    {/* Canvas Area */}
+                    <div className="flex-1 bg-gray-500 overflow-auto flex justify-center p-8">
                         <Document
                             file={pdfData ? { data: pdfData } : undefined}
                             onLoadSuccess={onDocumentLoadSuccess}
                             onLoadError={onDocumentLoadError}
-                            loading={<div className="text-white">Loading PDF...</div>}
-                            error={<div className="text-red-500">Failed to load PDF</div>}
+                            loading={<div className="text-white mt-10">Loading PDF...</div>}
+                            error={<div className="text-white bg-red-500 p-4 rounded mt-10">Failed to load PDF</div>}
+                            className="shadow-2xl"
                         >
                             <div
-                                className="relative shadow-lg"
+                                className="relative bg-white"
                                 ref={pageRef}
                                 onClick={activeTool === 'text' ? addTextAnnotation : undefined}
                                 onMouseDown={activeTool === 'draw' ? startDrawing : undefined}
@@ -384,75 +385,72 @@ export const PdfEditorPage: React.FC = () => {
                                 <Page
                                     pageNumber={currentPage}
                                     scale={scale}
-                                    loading={<div className="text-white">Loading page...</div>}
-                                    error={<div className="text-red-500">Failed to load page</div>}
+                                    loading={<div className="w-[600px] h-[800px] bg-white animate-pulse"></div>}
                                 />
-                                {/* text annotations */}
+
+                                {/* Annotations Layer */}
                                 {textAnnotations
-                                    .filter(annotation => annotation.page === currentPage)
-                                    .map(annotation => (
+                                    .filter(a => a.page === currentPage)
+                                    .map(a => (
                                         <div
-                                            key={annotation.id}
-                                            className="absolute cursor-move p-1 border border-dashed border-transparent 
-                       hover:border-blue-500 focus:border-blue-500 focus:outline-none 
-                       focus:bg-blue-50 bg-transparent"
-                                            style={{
-                                                left: annotation.x,
-                                                top: annotation.y,
-                                                fontSize: `${annotation.fontSize}px`,
-                                                color: annotation.color,
-                                            }}
-                                            contentEditable
+                                            key={a.id}
+                                            className="absolute p-0.5 border border-transparent hover:border-blue-300 focus:border-blue-500 outline-none"
+                                            style={{ left: a.x, top: a.y, fontSize: `${a.fontSize}px`, color: a.color, cursor: activeTool === 'select' ? 'move' : 'text' }}
+                                            contentEditable={activeTool === 'select'}
                                             suppressContentEditableWarning
                                             onBlur={(e) => {
-                                                const updated = textAnnotations.map(a =>
-                                                    a.id === annotation.id
-                                                        ? { ...a, text: e.currentTarget.textContent || '' }
-                                                        : a
-                                                );
-                                                setTextAnnotations(updated);
+                                                const text = e.currentTarget.textContent || '';
+                                                setTextAnnotations(prev => prev.map(p => p.id === a.id ? { ...p, text } : p));
                                             }}
                                         >
-                                            {annotation.text}
+                                            {a.text}
                                         </div>
-                                    ))}
+                                    ))
+                                }
 
-                                {/* drawing annotations */}
                                 {drawingAnnotations
-                                    .filter(annotation => annotation.page === currentPage)
-                                    .map(annotation => (
-                                        <svg
-                                            key={annotation.id}
-                                            className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                                        >
-                                            {annotation.type === 'rectangle' && annotation.points.length === 2 && (
+                                    .filter(a => a.page === currentPage)
+                                    .map(a => (
+                                        <svg key={a.id} className="absolute inset-0 w-full h-full pointer-events-none">
+                                            {a.type === 'rectangle' && a.points.length >= 2 && (
                                                 <rect
-                                                    x={Math.min(annotation.points[0].x, annotation.points[1].x)}
-                                                    y={Math.min(annotation.points[0].y, annotation.points[1].y)}
-                                                    width={Math.abs(annotation.points[1].x - annotation.points[0].x)}
-                                                    height={Math.abs(annotation.points[1].y - annotation.points[0].y)}
-                                                    stroke={annotation.color}
-                                                    strokeWidth={annotation.strokeWidth}
+                                                    x={Math.min(a.points[0].x, a.points[1].x)}
+                                                    y={Math.min(a.points[0].y, a.points[1].y)}
+                                                    width={Math.abs(a.points[1].x - a.points[0].x)}
+                                                    height={Math.abs(a.points[1].y - a.points[0].y)}
+                                                    stroke={a.color}
+                                                    strokeWidth={a.strokeWidth}
                                                     fill="none"
                                                 />
                                             )}
-                                            {annotation.type === 'line' && annotation.points.length === 2 && (
+                                            {a.type === 'circle' && a.points.length >= 2 && (
+                                                <ellipse
+                                                    cx={(a.points[0].x + a.points[1].x) / 2}
+                                                    cy={(a.points[0].y + a.points[1].y) / 2}
+                                                    rx={Math.abs(a.points[1].x - a.points[0].x) / 2}
+                                                    ry={Math.abs(a.points[1].y - a.points[0].y) / 2}
+                                                    stroke={a.color}
+                                                    strokeWidth={a.strokeWidth}
+                                                    fill="none"
+                                                />
+                                            )}
+                                            {a.type === 'line' && a.points.length >= 2 && (
                                                 <line
-                                                    x1={annotation.points[0].x}
-                                                    y1={annotation.points[0].y}
-                                                    x2={annotation.points[1].x}
-                                                    y2={annotation.points[1].y}
-                                                    stroke={annotation.color}
-                                                    strokeWidth={annotation.strokeWidth}
+                                                    x1={a.points[0].x}
+                                                    y1={a.points[0].y}
+                                                    x2={a.points[1].x}
+                                                    y2={a.points[1].y}
+                                                    stroke={a.color}
+                                                    strokeWidth={a.strokeWidth}
                                                 />
                                             )}
                                         </svg>
-                                    ))}
+                                    ))
+                                }
 
-                                {/* current drawing in progress */}
                                 {currentDrawing && currentDrawing.page === currentPage && (
-                                    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                                        {currentDrawing.type === 'rectangle' && currentDrawing.points.length === 2 && (
+                                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                                        {currentDrawing.type === 'rectangle' && currentDrawing.points.length >= 2 && (
                                             <rect
                                                 x={Math.min(currentDrawing.points[0].x, currentDrawing.points[1].x)}
                                                 y={Math.min(currentDrawing.points[0].y, currentDrawing.points[1].y)}
@@ -463,7 +461,7 @@ export const PdfEditorPage: React.FC = () => {
                                                 fill="none"
                                             />
                                         )}
-                                        {currentDrawing.type === 'line' && currentDrawing.points.length === 2 && (
+                                        {currentDrawing.type === 'line' && currentDrawing.points.length >= 2 && (
                                             <line
                                                 x1={currentDrawing.points[0].x}
                                                 y1={currentDrawing.points[0].y}
@@ -475,12 +473,14 @@ export const PdfEditorPage: React.FC = () => {
                                         )}
                                     </svg>
                                 )}
+
                             </div>
                         </Document>
                     </div>
-
                 </div>
             )}
-        </div>
+        </ToolLayout>
     );
 };
+
+export default PdfEditorPage;

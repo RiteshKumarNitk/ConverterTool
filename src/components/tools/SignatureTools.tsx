@@ -1,33 +1,54 @@
 import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, PenTool } from 'lucide-react';
 import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { ToolLayout } from '../layout/ToolLayout';
 
 export const SignatureTools: React.FC = () => {
   return (
-    <div className="space-y-8">
-      <div className="max-w-2xl mx-auto">
-        <Card className="p-8 text-center">
-          <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Professional E-Signature Solutions</h2>
-          <p className="text-gray-600 mb-6">
-            Securely sign documents and verify signatures with our upcoming 
-            digital signature tools. Preserve signatures across conversions
-            and maintain document integrity.
-          </p>
-        </Card>
+    <ToolLayout
+      title="E-Signature Tools"
+      description="Securely sign documents and verify signatures. We adhere to strict standards to ensure your digital signatures are preserved across all conversions."
+      icon={<PenTool className="w-10 h-10 text-rose-600" />}
+    >
+      <div className="flex flex-col items-center justify-center py-12 text-center space-y-8">
 
-        <Card className="p-4 mt-4 flex items-start">
-          <AlertCircle className="w-5 h-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0" />
-          <p className="text-yellow-700">
-            Your current PDF to image conversions already preserve existing signatures
+        <div className="relative">
+          <div className="absolute inset-0 bg-rose-100 rounded-full blur-xl opacity-50 animate-pulse" />
+          <div className="relative bg-white p-6 rounded-full shadow-lg border border-rose-50">
+            <PenTool className="w-16 h-16 text-rose-500" />
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto space-y-4">
+          <h2 className="text-2xl font-bold text-gray-800">Professional Signatures Coming Soon</h2>
+          <p className="text-gray-600 leading-relaxed">
+            We are building a comprehensive suite of e-signature tools that will allow you to sign PDFs,
+            request signatures from others, and manage signed documents securely.
+            Currently, our conversion tools automatically preserve all existing signatures.
           </p>
-        </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl mt-8">
+          <Card className="p-6 bg-yellow-50 border-yellow-100 flex items-start text-left">
+            <AlertCircle className="w-6 h-6 text-yellow-600 mr-3 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-yellow-800 mb-1">Preserved Integrity</h3>
+              <p className="text-yellow-700 text-sm">
+                Converting PDFs to images or other formats with our tools keeps your existing digital signatures intact and visible.
+              </p>
+            </div>
+          </Card>
+          <Card className="p-6 bg-blue-50 border-blue-100 flex items-start text-left">
+            <AlertCircle className="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-blue-800 mb-1">ISO Compliant</h3>
+              <p className="text-blue-700 text-sm">
+                Our upcoming tools will follow standard PDF signature protocols to ensure legal validity.
+              </p>
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </ToolLayout>
   );
 };

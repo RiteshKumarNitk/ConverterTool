@@ -2,9 +2,9 @@ import React from 'react';
 import { FileDropzone } from '../common/FileDropzone';
 import { ConversionResults } from '../common/ConversionResults';
 import { FeaturesSection } from '../common/FeaturesSection';
-// import { useFileConverter } from '../../hooks/useFileConverter';
 import { useImageToPDFConverter } from '../../features/image-to-pdf/hooks/useImageToPDFConverter';
-
+import { ToolLayout } from '../layout/ToolLayout';
+import { FileImage } from 'lucide-react';
 
 export const PdfTools: React.FC = () => {
   const {
@@ -42,30 +42,40 @@ export const PdfTools: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-2xl mx-auto">
-        <FileDropzone
-        isDragging={isDragging}
-        isConverting={isConverting}
-        progress={progress}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onFileInput={handleFileInput}
-        mode="image-to-pdf" // 👈 pass here
-      />
+    <ToolLayout
+      title="Image to PDF Converter"
+      description="Transform your images (JPG, PNG, GIF) into professional PDF documents in seconds. Merge multiple images into a single PDF file with ease."
+      icon={<FileImage className="w-10 h-10 text-blue-600" />}
+    >
+      <div className="space-y-8">
+        <div className="max-w-3xl mx-auto">
+          <FileDropzone
+            isDragging={isDragging}
+            isConverting={isConverting}
+            progress={progress}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onFileInput={handleFileInput}
+            mode="image-to-pdf"
+          />
+        </div>
+
+        {results.length > 0 && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ConversionResults
+              results={results}
+              warning={warning}
+              error={error}
+              onReset={resetConverter}
+            />
+          </div>
+        )}
+
+        <div className="mt-12 pt-8 border-t border-gray-100">
+          <FeaturesSection />
+        </div>
       </div>
-
-      {results.length > 0 && (
-        <ConversionResults 
-          results={results} 
-          warning={warning}
-          error={error}
-          onReset={resetConverter}
-        />
-      )}
-
-      <FeaturesSection />
-    </div>
+    </ToolLayout>
   );
 };
