@@ -1,5 +1,5 @@
 // PdfEditorPage/components/PdfEditorPage.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { usePdfEditor } from '../hooks/usePdfEditor';
 import Button from "../common/Button";
@@ -7,9 +7,8 @@ import { Alert } from '../../../components/ui/Alert';
 import { FileDropzone } from '../common/FileDropzone';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Configure PDF worker - using a more reliable approach
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF worker - CDN approach to avoid local bundle issues
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface TextAnnotation {
     id: string;
@@ -41,8 +40,7 @@ interface DrawingAnnotation {
 }
 
 export const PdfEditorPage: React.FC = () => {
-    const [fileUrl, setFileUrl] = useState<Uint8Array | null>(null);
-const [fileBuffer, setFileBuffer] = useState<Uint8Array>();
+    const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [numPages, setNumPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -61,15 +59,6 @@ const [fileBuffer, setFileBuffer] = useState<Uint8Array>();
 
     const { saveEditedPdf, isLoading } = usePdfEditor();
 
-    // Clean up object URLs on unmount
-    useEffect(() => {
-        return () => {
-            if (fileUrl) {
-                URL.revokeObjectURL(fileUrl);
-            }
-        };
-    }, [fileUrl]);
-
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
         setPdfError('');
@@ -80,20 +69,14 @@ const [fileBuffer, setFileBuffer] = useState<Uint8Array>();
         setPdfError('Failed to load the PDF file. Please try another file.');
     }
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-  if (acceptedFiles.length > 0) {
-    const file = acceptedFiles[0];
-    const url = URL.createObjectURL(file);
-    setFileUrl(url);
-  }
-}, []);
     const handleFileAccepted = (acceptedFile: File) => {
         setFile(acceptedFile);
 
         const reader = new FileReader();
         reader.onload = () => {
-            const typedArray = new Uint8Array(reader.result as ArrayBuffer);
-            setFileUrl(typedArray);  // 👈 store ArrayBuffer instead of blob URL
+            if (reader.result instanceof ArrayBuffer) {
+                setPdfData(new Uint8Array(reader.result));
+            }
         };
         reader.readAsArrayBuffer(acceptedFile);
 
@@ -359,9 +342,8 @@ const [fileBuffer, setFileBuffer] = useState<Uint8Array>();
 
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => {
-                                if (fileUrl) URL.revokeObjectURL(fileUrl);
                                 setFile(null);
-                                setFileUrl(null);
+                                setPdfData(null);
                             }}>
                                 Close
                             </Button>
@@ -383,28 +365,28 @@ const [fileBuffer, setFileBuffer] = useState<Uint8Array>();
                     )}
 
                     <div className="bg-gray-800 p-8 flex justify-center overflow-auto">
-  <Document
-    file={fileUrl ? { data: fileUrl } : undefined}
-    onLoadSuccess={onDocumentLoadSuccess}
-    onLoadError={onDocumentLoadError}
-    loading={<div className="text-white">Loading PDF...</div>}
-    error={<div className="text-red-500">Failed to load PDF</div>}
-  >
-    <div
-      className="relative shadow-lg"
-      ref={pageRef}
-      onClick={activeTool === 'text' ? addTextAnnotation : undefined}
-      onMouseDown={activeTool === 'draw' ? startDrawing : undefined}
-      onMouseMove={activeTool === 'draw' ? continueDrawing : undefined}
-      onMouseUp={activeTool === 'draw' ? finishDrawing : undefined}
-      onMouseLeave={activeTool === 'draw' ? finishDrawing : undefined}
-    >
-      <Page
-        pageNumber={currentPage}
-        scale={scale}
-        loading={<div className="text-white">Loading page...</div>}
-        error={<div className="text-red-500">Failed to load page</div>}
-      />
+                        <Document
+                            file={pdfData ? { data: pdfData } : undefined}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                            onLoadError={onDocumentLoadError}
+                            loading={<div className="text-white">Loading PDF...</div>}
+                            error={<div className="text-red-500">Failed to load PDF</div>}
+                        >
+                            <div
+                                className="relative shadow-lg"
+                                ref={pageRef}
+                                onClick={activeTool === 'text' ? addTextAnnotation : undefined}
+                                onMouseDown={activeTool === 'draw' ? startDrawing : undefined}
+                                onMouseMove={activeTool === 'draw' ? continueDrawing : undefined}
+                                onMouseUp={activeTool === 'draw' ? finishDrawing : undefined}
+                                onMouseLeave={activeTool === 'draw' ? finishDrawing : undefined}
+                            >
+                                <Page
+                                    pageNumber={currentPage}
+                                    scale={scale}
+                                    loading={<div className="text-white">Loading page...</div>}
+                                    error={<div className="text-red-500">Failed to load page</div>}
+                                />
                                 {/* text annotations */}
                                 {textAnnotations
                                     .filter(annotation => annotation.page === currentPage)

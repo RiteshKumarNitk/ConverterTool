@@ -1,7 +1,13 @@
 import React, { useRef, useState } from "react";
 import { usePDFSplitter } from "../hooks/usePDFSplitter";
 import * as pdfjsLib from "pdfjs-dist";
-import "pdfjs-dist/build/pdf.worker.entry";
+
+// Configure PDF worker - CDN approach to avoid local bundle issues
+// @ts-ignore
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+if (pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+}
 
 const SplitPDFTools = () => {
   const { handleSplit, resultFiles, loading } = usePDFSplitter();
@@ -25,7 +31,7 @@ const SplitPDFTools = () => {
       setFile(selectedFile);
       const arrayBuffer = await selectedFile.arrayBuffer();
 
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       setPageCount(pdf.numPages);
       const thumbnails: string[] = [];
 
@@ -97,9 +103,8 @@ const SplitPDFTools = () => {
       <button
         onClick={onSplit}
         disabled={loading || !file || !ranges}
-        className={`w-full py-2 px-4 text-white font-semibold rounded-md transition ${
-          loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-        }`}
+        className={`w-full py-2 px-4 text-white font-semibold rounded-md transition ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          }`}
       >
         {loading ? "Splitting..." : "Split PDF"}
       </button>

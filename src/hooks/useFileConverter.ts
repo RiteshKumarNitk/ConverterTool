@@ -4,14 +4,18 @@ import { convertImageToPDF, convertPDFToImages } from '../utils/fileConverter';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// @ts-ignore
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+if (pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+}
 
 export const useFileConverter = () => {
   const [results, setResults] = useState<ConversionResult[]>([]);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
-  const [progress, setProgress] = useState<{current: number; total: number} | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
 
   const handleFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -32,7 +36,7 @@ export const useFileConverter = () => {
       for (const file of files) {
         if (file.type === 'application/pdf') {
           const arrayBuffer = await file.arrayBuffer();
-          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
           totalPages += pdf.numPages;
         } else {
           totalPages += 1; // Each image counts as one
@@ -41,7 +45,7 @@ export const useFileConverter = () => {
 
       for (const file of files) {
         const fileType = file.type;
-        
+
         if (fileType.startsWith('image/')) {
           // Convert image to PDF
           const pdfBlob = await convertImageToPDF(file);
@@ -51,7 +55,7 @@ export const useFileConverter = () => {
             downloadUrl,
             type: 'pdf'
           });
-          
+
           // Update progress
           processedPages += 1;
           setProgress({ current: processedPages, total: totalPages });
@@ -61,7 +65,7 @@ export const useFileConverter = () => {
             hasLargeFile = true;
             continue;
           }
-          
+
           // Convert PDF to images
           try {
             const imageBlobs = await convertPDFToImages(file);
@@ -72,7 +76,7 @@ export const useFileConverter = () => {
                 downloadUrl,
                 type: 'image'
               });
-              
+
               // Update progress
               processedPages += 1;
               setProgress({ current: processedPages, total: totalPages });

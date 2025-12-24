@@ -4,7 +4,12 @@ import { ConversionResult } from '../../../types';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// @ts-ignore
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+
+if (pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+}
 
 export const useAnyFileToImageConverter = () => {
   const [results, setResults] = useState<ConversionResult[]>([]);
@@ -12,7 +17,7 @@ export const useAnyFileToImageConverter = () => {
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  
+
   const resultsRef = useRef<ConversionResult[]>([]);
   resultsRef.current = results;
 
@@ -56,15 +61,15 @@ export const useAnyFileToImageConverter = () => {
 
     try {
       const newResults: ConversionResult[] = [];
-      
+
       // Normalize jpg to jpeg for internal processing
       const internalFormat = outputFormat === 'jpg' ? 'jpeg' : outputFormat;
-      
+
       // Process files sequentially to avoid memory issues
       for (const file of files) {
         try {
           const ext = file.name.split('.').pop()?.toLowerCase() || '';
-          
+
           // PDF file handling
           if (ext === 'pdf') {
             if (internalFormat === 'pdf') {
@@ -78,7 +83,7 @@ export const useAnyFileToImageConverter = () => {
             } else {
               // Convert PDF to images
               const arrayBuffer = await file.arrayBuffer();
-              const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+              const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
 
               for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
@@ -89,9 +94,9 @@ export const useAnyFileToImageConverter = () => {
                 canvas.height = viewport.height;
 
                 await page.render({ canvasContext: context, viewport }).promise;
-                const blob = await new Promise<Blob>(resolve => 
+                const blob = await new Promise<Blob>(resolve =>
                   canvas.toBlob(blob => resolve(blob!), `image/${internalFormat}`, 0.9));
-                
+
                 newResults.push({
                   fileName: `${file.name.replace(/\.[^/.]+$/, '')}_page_${i}.${outputFormat}`,
                   downloadUrl: URL.createObjectURL(blob),
@@ -100,18 +105,18 @@ export const useAnyFileToImageConverter = () => {
                 });
               }
             }
-          } 
+          }
           // Image file handling
           else if (['png', 'jpg', 'jpeg'].includes(ext)) {
             if (internalFormat === 'pdf') {
               // Convert image to PDF
               const pdfDoc = await PDFDocument.create();
               const imageBytes = await file.arrayBuffer();
-              
-              const image = ext === 'png' 
+
+              const image = ext === 'png'
                 ? await pdfDoc.embedPng(imageBytes)
                 : await pdfDoc.embedJpg(imageBytes);
-              
+
               const page = pdfDoc.addPage([image.width, image.height]);
               page.drawImage(image, {
                 x: 0,
@@ -119,10 +124,10 @@ export const useAnyFileToImageConverter = () => {
                 width: image.width,
                 height: image.height,
               });
-              
+
               const pdfBytes = await pdfDoc.save();
-              const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-              
+              const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+
               newResults.push({
                 fileName: `${file.name.replace(/\.[^/.]+$/, '')}.pdf`,
                 downloadUrl: URL.createObjectURL(blob),
@@ -137,17 +142,17 @@ export const useAnyFileToImageConverter = () => {
               canvas.height = img.height;
               const ctx = canvas.getContext('2d')!;
               ctx.drawImage(img, 0, 0);
-              
-              const blob = await new Promise<Blob>(resolve => 
+
+              const blob = await new Promise<Blob>(resolve =>
                 canvas.toBlob(blob => resolve(blob!), `image/${internalFormat}`, 0.9));
-              
+
               newResults.push({
                 fileName: `${file.name.replace(/\.[^/.]+$/, '')}.${outputFormat}`,
                 downloadUrl: URL.createObjectURL(blob),
                 type: 'image',
                 originalFile: file
               });
-              
+
               img.close();
             }
           } else {
@@ -175,7 +180,7 @@ export const useAnyFileToImageConverter = () => {
 
     try {
       const zip = new JSZip();
-      
+
       // Process files in batches to avoid memory issues
       const batchSize = 10;
       for (let i = 0; i < results.length; i += batchSize) {
@@ -189,12 +194,12 @@ export const useAnyFileToImageConverter = () => {
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(zipBlob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = 'converted_files.zip';
       a.click();
-      
+
       setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (err) {
       setError('Failed to create ZIP archive');
@@ -211,7 +216,7 @@ export const useAnyFileToImageConverter = () => {
 
     try {
       const pdfDoc = await PDFDocument.create();
-      
+
       // Process each result
       for (const result of results) {
         try {
@@ -227,7 +232,7 @@ export const useAnyFileToImageConverter = () => {
             const image = result.fileName.endsWith('.png')
               ? await pdfDoc.embedPng(imageBytes)
               : await pdfDoc.embedJpg(imageBytes);
-            
+
             const page = pdfDoc.addPage([image.width, image.height]);
             page.drawImage(image, {
               x: 0,
@@ -243,14 +248,14 @@ export const useAnyFileToImageConverter = () => {
       }
 
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = 'merged_files.pdf';
       a.click();
-      
+
       setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (err) {
       setError('Failed to merge files into PDF');

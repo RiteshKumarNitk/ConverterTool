@@ -4,7 +4,12 @@ import { convertPDFToImages } from '../../../utils/fileConverter';
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// @ts-ignore
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
+
+if (pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+}
 
 export const usePDFToImageConverter = () => {
   const [results, setResults] = useState<ConversionResult[]>([]);
@@ -40,7 +45,7 @@ export const usePDFToImageConverter = () => {
 
       for (const file of pdfs) {
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
         totalPages += pdf.numPages;
 
         const imageBlobs = await convertPDFToImages(file);

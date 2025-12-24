@@ -1,9 +1,14 @@
 
 import jsPDF from 'jspdf';
 import * as pdfjsLib from 'pdfjs-dist';
+// Set the worker source for PDF.js
+// @ts-ignore
+const pdfjs = (pdfjsLib as any).default || pdfjsLib;
 
 // Set the worker source for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+if (pdfjs.GlobalWorkerOptions) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+}
 
 export async function convertImageToPDF(imageFile: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -52,14 +57,14 @@ export async function convertImageToPDF(imageFile: File): Promise<Blob> {
 export async function convertPDFToImages(pdfFile: File, scale: number = 1): Promise<Blob[]> {
   try {
     const arrayBuffer = await pdfFile.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
     const imageBlobs: Blob[] = [];
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1 }); // Base scale
-      const originalWidth = viewport.width;
-      const originalHeight = viewport.height;
+      // const viewport = page.getViewport({ scale: 1 }); // Base scale
+      // const originalWidth = viewport.width;
+      // const originalHeight = viewport.height;
 
       // Use passed scale
       const targetScale = scale;
