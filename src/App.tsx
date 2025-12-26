@@ -18,6 +18,14 @@ import FilterDataWithName from './features/AnyToJpeg/components/FilterDataWithNa
 import ImageConverterTools from './features/image-converter/components/ImageConverterTools';
 import { PdfEditorPage } from './features/PdfEditorPage/components/PdfEditorPage';
 import FontConverterTools from './features/fontconverter/components/FontConverterTools';
+import ImageEnhancerTools from './features/image-enhancer/components/ImageEnhancerTools';
+import ExcelToPdfTools from './features/excel-to-pdf/components/ExcelToPdfTools';
+import PdfToExcelTools from './features/pdf-to-excel/components/PdfToExcelTools';
+import WordToPdfTools from './features/word-to-pdf/components/WordToPdfTools';
+import PdfToWordTools from './features/pdf-to-word/components/PdfToWordTools';
+import CropPdfTools from './features/crop-pdf/components/CropPdfTools';
+import RedactPdfTools from './features/redact-pdf/components/RedactPdfTools';
+import OcrPdfTools from './features/ocr-pdf/components/OcrPdfTools';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -44,6 +52,15 @@ export const App: React.FC = () => {
             <Route path="/compress" element={<CompressTools />} />
             <Route path="/FilterImageName" element={<FilterDataWithName />} />
             <Route path="/ImageConverter" element={<ImageConverterTools />} />
+            <Route path="/image-enhancer" element={<ImageEnhancerTools />} />
+
+            <Route path="/excel-to-pdf" element={<ExcelToPdfTools />} />
+            <Route path="/pdf-to-excel" element={<PdfToExcelTools />} />
+            <Route path="/word-to-pdf" element={<WordToPdfTools />} />
+            <Route path="/pdf-to-word" element={<PdfToWordTools />} />
+            <Route path="/crop-pdf" element={<CropPdfTools />} />
+            <Route path="/redact-pdf" element={<RedactPdfTools />} />
+            <Route path="/ocr-pdf" element={<OcrPdfTools />} />
 
             {/* Optional fallback route */}
             <Route path="*" element={<AllTools />} />

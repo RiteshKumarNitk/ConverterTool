@@ -11,8 +11,14 @@ import {
   ImageDown,
   Minimize2,
   Filter,
-  Languages,
-  Wand2 // For 'Image to any'
+  Wand2, // For 'Image to any'
+  Sparkles,
+  FileSpreadsheet, // Excel
+  Crop, // Crop
+  ShieldAlert, // Redact
+  File, // Generic File
+  Languages, // Font Converter
+  ScanText // OCR
 } from "lucide-react";
 import { ToolType } from "../../types";
 import {
@@ -89,7 +95,7 @@ const initialTools: ToolItem[] = [
   {
     title: "Compress PDF",
     description: "Reduce file size while maintaining document quality.",
-    toolKey: "Compress",
+    toolKey: "compress",
     icon: <Minimize2 className="w-8 h-8 text-white" />,
     color: "bg-red-600",
     gradient: "from-red-500 to-orange-600",
@@ -141,6 +147,70 @@ const initialTools: ToolItem[] = [
     icon: <Languages className="w-8 h-8 text-white" />,
     color: "bg-amber-600",
     gradient: "from-amber-500 to-yellow-600",
+  },
+  {
+    title: "Image Enhancer",
+    description: "Upscale, denoise, and sharpen images with pro-level adjustments.",
+    toolKey: "image-enhancer",
+    icon: <Sparkles className="w-8 h-8 text-white" />,
+    color: "bg-purple-600",
+    gradient: "from-purple-500 to-fuchsia-600",
+  },
+  {
+    title: "Excel to PDF",
+    description: "Convert Excel spreadsheets (.xlsx) to PDF documents.",
+    toolKey: "excel-to-pdf",
+    icon: <FileSpreadsheet className="w-8 h-8 text-white" />,
+    color: "bg-green-600",
+    gradient: "from-green-500 to-emerald-600",
+  },
+  {
+    title: "PDF to Excel",
+    description: "Convert PDF tables into editable Excel spreadsheets.",
+    toolKey: "pdf-to-excel",
+    icon: <FileSpreadsheet className="w-8 h-8 text-white" />,
+    color: "bg-emerald-600",
+    gradient: "from-emerald-500 to-green-600",
+  },
+  {
+    title: "Word to PDF",
+    description: "Convert Word documents (.docx) to PDF format.",
+    toolKey: "word-to-pdf",
+    icon: <FileText className="w-8 h-8 text-white" />,
+    color: "bg-blue-700",
+    gradient: "from-blue-600 to-indigo-700",
+  },
+  {
+    title: "PDF to Word",
+    description: "Convert PDF documents to editable Word files.",
+    toolKey: "pdf-to-word",
+    icon: <FileText className="w-8 h-8 text-white" />,
+    color: "bg-indigo-600",
+    gradient: "from-indigo-500 to-blue-600",
+  },
+  {
+    title: "Crop PDF",
+    description: "Trim margins and crop PDF pages visually.",
+    toolKey: "crop-pdf",
+    icon: <Crop className="w-8 h-8 text-white" />,
+    color: "bg-amber-600",
+    gradient: "from-amber-500 to-orange-600",
+  },
+  {
+    title: "Redact PDF",
+    description: "Permanently hide sensitive info with black bars.",
+    toolKey: "redact-pdf",
+    icon: <ShieldAlert className="w-8 h-8 text-white" />,
+    color: "bg-red-700",
+    gradient: "from-red-600 to-rose-700",
+  },
+  {
+    title: "OCR PDF",
+    description: "Extract text from scanned PDFs (English, Hindi, etc).",
+    toolKey: "ocr-pdf",
+    icon: <ScanText className="w-8 h-8 text-white" />,
+    color: "bg-orange-600",
+    gradient: "from-orange-500 to-yellow-600",
   },
 ];
 

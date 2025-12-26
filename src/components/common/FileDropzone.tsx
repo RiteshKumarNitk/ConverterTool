@@ -9,7 +9,8 @@ interface FileDropzoneProps {
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  mode: 'image-to-pdf' | 'pdf-to-image' | 'merge' | 'any-to-image';
+  mode: 'image-to-pdf' | 'pdf-to-image' | 'merge' | 'any-to-image' | 'enhance-image' | 'pdf'; // Added 'pdf' for generic PDF tools
+  accept?: string;
 }
 
 export const FileDropzone: React.FC<FileDropzoneProps> = ({
@@ -20,7 +21,8 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   onDragLeave,
   onDrop,
   mode,
-  onFileInput
+  onFileInput,
+  accept
 }) => {
   return (
     <div
@@ -36,7 +38,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       <input
         type="file"
         multiple
-        accept={mode === 'image-to-pdf' ? 'image/*' : 'application/pdf'}
+        accept={accept || ((mode === 'image-to-pdf' || mode === 'enhance-image') ? 'image/*' : 'application/pdf')}
         onChange={onFileInput}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         disabled={isConverting}
@@ -68,6 +70,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
               {mode === 'image-to-pdf' && <div className="p-3 bg-blue-100 rounded-full"><FileImage className="w-8 h-8 text-blue-600" /></div>}
               {(mode === 'pdf-to-image' || mode === 'merge') && <div className="p-3 bg-red-100 rounded-full"><FileText className="w-8 h-8 text-red-600" /></div>}
               {mode === 'merge' && <div className="p-3 bg-yellow-100 rounded-full"><Layers className="w-8 h-8 text-yellow-600" /></div>}
+              {mode === 'enhance-image' && <div className="p-3 bg-purple-100 rounded-full"><FileImage className="w-8 h-8 text-purple-600" /></div>}
             </div>
             <Upload className="w-12 h-12 text-gray-400 mb-4" />
             <p className="text-xl font-semibold text-gray-700">
@@ -78,6 +81,11 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                 Supports: JPG, PNG, GIF, WebP → PDF
               </p>
             )}
+            {mode === 'enhance-image' && (
+              <p className="text-sm text-gray-500">
+                Supports: JPG, PNG, WebP for Enhancement
+              </p>
+            )}
             {mode === 'pdf-to-image' && (
               <p className="text-sm text-gray-500">
                 Supports: PDF → PNG, JPG
@@ -86,6 +94,11 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
             {mode === 'merge' && (
               <p className="text-sm text-gray-500">
                 Select multiple PDF files to combine
+              </p>
+            )}
+            {mode === 'pdf' && (
+              <p className="text-sm text-gray-500">
+                Supports: PDF Documents
               </p>
             )}
           </>

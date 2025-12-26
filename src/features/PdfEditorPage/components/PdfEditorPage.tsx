@@ -5,14 +5,10 @@ import { usePdfEditor } from '../hooks/usePdfEditor';
 import { Button } from '../../../components/ui/Button';
 import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { FileDropzone } from '../../../components/common/FileDropzone';
-import { AlertCircle, MousePointer, Type, Square, Image as ImageIcon, PenTool, ZoomIn, ZoomOut, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, MousePointer, Type, Square, Image as ImageIcon, PenTool, ZoomIn, ZoomOut, Save, X, ChevronLeft, ChevronRight, Pen } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Configure PDF worker
-// @ts-ignore
-const pdfjsLib = pdfjs;
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+import '../../../utils/pdf-worker';
 
 interface TextAnnotation {
     id: string;
@@ -36,7 +32,7 @@ interface ImageAnnotation {
 
 interface DrawingAnnotation {
     id: string;
-    type: 'line' | 'rectangle' | 'circle' | 'arrow';
+    type: 'line' | 'rectangle' | 'circle' | 'arrow' | 'freehand';
     points: { x: number; y: number }[];
     color: string;
     strokeWidth: number;
@@ -52,14 +48,16 @@ export const PdfEditorPage: React.FC = () => {
     const [textAnnotations, setTextAnnotations] = useState<TextAnnotation[]>([]);
     const [imageAnnotations, setImageAnnotations] = useState<ImageAnnotation[]>([]);
     const [drawingAnnotations, setDrawingAnnotations] = useState<DrawingAnnotation[]>([]);
-    const [activeTool, setActiveTool] = useState<'select' | 'text' | 'image' | 'draw' | 'signature' | null>('select');
+    const [activeTool, setActiveTool] = useState<'select' | 'text' | 'image' | 'draw' | 'freehand' | null>('select');
     const [drawingType, setDrawingType] = useState<'line' | 'rectangle' | 'circle' | 'arrow'>('rectangle');
     const [currentColor, setCurrentColor] = useState<string>('#000000');
     const [fontSize, setFontSize] = useState<number>(12);
+    const [strokeWidth, setStrokeWidth] = useState<number>(2);
     const [pdfError, setPdfError] = useState<string>('');
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
     const [currentDrawing, setCurrentDrawing] = useState<DrawingAnnotation | null>(null);
     const pageRef = useRef<HTMLDivElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const { saveEditedPdf, isLoading } = usePdfEditor();
@@ -117,6 +115,40 @@ export const PdfEditorPage: React.FC = () => {
         if (selectedFile) processFile(selectedFile);
     };
 
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !pageRef.current) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result) {
+                const img = new Image();
+                img.src = event.target.result as string;
+                img.onload = () => {
+                    // Default placement: visible part of page
+                    const x = 50;
+                    const y = 50;
+                    // Scale down if huge
+                    const aspectRatio = img.width / img.height;
+                    const width = Math.min(200, img.width);
+                    const height = width / aspectRatio;
+
+                    const newImage: ImageAnnotation = {
+                        id: `img-${Date.now()}`,
+                        src: event.target?.result as string,
+                        x,
+                        y,
+                        width,
+                        height,
+                        page: currentPage
+                    };
+                    setImageAnnotations([...imageAnnotations, newImage]);
+                    setActiveTool('select');
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    };
 
     const addTextAnnotation = (e: React.MouseEvent<HTMLDivElement>) => {
         if (activeTool !== 'text' || !pageRef.current) return;
@@ -140,7 +172,7 @@ export const PdfEditorPage: React.FC = () => {
     };
 
     const startDrawing = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (activeTool !== 'draw' || !pageRef.current) return;
+        if ((activeTool !== 'draw' && activeTool !== 'freehand') || !pageRef.current) return;
 
         const rect = pageRef.current.getBoundingClientRect();
         const x = (e.clientX - rect.left) / scale;
@@ -149,10 +181,10 @@ export const PdfEditorPage: React.FC = () => {
         setIsDrawing(true);
         setCurrentDrawing({
             id: `drawing-${Date.now()}`,
-            type: drawingType,
+            type: activeTool === 'freehand' ? 'freehand' : drawingType,
             points: [{ x, y }],
             color: currentColor,
-            strokeWidth: 2,
+            strokeWidth: strokeWidth,
             page: currentPage
         });
     };
@@ -164,18 +196,26 @@ export const PdfEditorPage: React.FC = () => {
         const x = (e.clientX - rect.left) / scale;
         const y = (e.clientY - rect.top) / scale;
 
-        if (currentDrawing.points.length === 1) {
+        if (currentDrawing.type === 'freehand') {
             setCurrentDrawing({
                 ...currentDrawing,
                 points: [...currentDrawing.points, { x, y }]
             });
         } else {
-            const updatedPoints = [...currentDrawing.points];
-            updatedPoints[1] = { x, y };
-            setCurrentDrawing({
-                ...currentDrawing,
-                points: updatedPoints
-            });
+            // Shape drawing (rect, circle...) - update end point
+            if (currentDrawing.points.length === 1) {
+                setCurrentDrawing({
+                    ...currentDrawing,
+                    points: [...currentDrawing.points, { x, y }]
+                });
+            } else {
+                const updatedPoints = [...currentDrawing.points];
+                updatedPoints[1] = { x, y };
+                setCurrentDrawing({
+                    ...currentDrawing,
+                    points: updatedPoints
+                });
+            }
         }
     };
 
@@ -220,6 +260,7 @@ export const PdfEditorPage: React.FC = () => {
         >
             {!file ? (
                 <div className="max-w-3xl mx-auto py-12">
+                    {/* Reuse pdf-to-image styling/component by passing specific mode if needed or props */}
                     <FileDropzone
                         isDragging={isDragging}
                         isConverting={false}
@@ -228,7 +269,8 @@ export const PdfEditorPage: React.FC = () => {
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onFileInput={handleFileInput}
-                        mode="pdf-to-image" // Reusing styling
+                        mode="pdf-to-image"
+                        accept=".pdf"
                     />
                 </div>
             ) : (
@@ -242,7 +284,7 @@ export const PdfEditorPage: React.FC = () => {
                                 variant={activeTool === 'select' ? 'primary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setActiveTool('select')}
-                                title="Select"
+                                title="Select / Move"
                             >
                                 <MousePointer className="w-4 h-4" />
                             </Button>
@@ -255,6 +297,14 @@ export const PdfEditorPage: React.FC = () => {
                                 <Type className="w-4 h-4" />
                             </Button>
                             <Button
+                                variant={activeTool === 'freehand' ? 'primary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setActiveTool('freehand')}
+                                title="Freehand Draw"
+                            >
+                                <Pen className="w-4 h-4" />
+                            </Button>
+                            <Button
                                 variant={activeTool === 'draw' ? 'primary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setActiveTool('draw')}
@@ -262,15 +312,30 @@ export const PdfEditorPage: React.FC = () => {
                             >
                                 <Square className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" disabled title="Add Image (Coming Soon)">
-                                <ImageIcon className="w-4 h-4 opacity-50" />
+                            <Button
+                                variant={activeTool === 'image' ? 'primary' : 'ghost'}
+                                size="sm"
+                                onClick={() => {
+                                    setActiveTool('image');
+                                    imageInputRef.current?.click();
+                                }}
+                                title="Add Image"
+                            >
+                                <ImageIcon className="w-4 h-4" />
+                                <input
+                                    ref={imageInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                />
                             </Button>
                         </div>
 
                         <div className="h-6 w-px bg-gray-300 mx-1"></div>
 
-                        {/* Text Properties */}
-                        {activeTool === 'text' && (
+                        {/* Sub-tools based on Active Tool */}
+                        {(activeTool === 'text') && (
                             <div className="flex items-center gap-2 animate-in fade-in">
                                 <input
                                     type="number"
@@ -291,19 +356,29 @@ export const PdfEditorPage: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Draw Properties */}
-                        {activeTool === 'draw' && (
+                        {(activeTool === 'draw' || activeTool === 'freehand') && (
                             <div className="flex items-center gap-2 animate-in fade-in">
-                                <select
-                                    value={drawingType}
-                                    onChange={(e) => setDrawingType(e.target.value as any)}
-                                    className="rounded border border-gray-300 py-1 text-sm bg-white"
-                                >
-                                    <option value="rectangle">Rectangle</option>
-                                    <option value="circle">Circle</option>
-                                    <option value="line">Line</option>
-                                    <option value="arrow">Arrow</option>
-                                </select>
+                                {activeTool === 'draw' && (
+                                    <select
+                                        value={drawingType}
+                                        onChange={(e) => setDrawingType(e.target.value as any)}
+                                        className="rounded border border-gray-300 py-1 text-sm bg-white"
+                                    >
+                                        <option value="rectangle">Rectangle</option>
+                                        <option value="circle">Circle</option>
+                                        <option value="line">Line</option>
+                                        <option value="arrow">Arrow</option>
+                                    </select>
+                                )}
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    value={strokeWidth}
+                                    onChange={(e) => setStrokeWidth(Number(e.target.value))}
+                                    className="w-14 px-2 py-1 rounded border border-gray-300 text-sm"
+                                    title="Stroke Width"
+                                />
                                 <input
                                     type="color"
                                     value={currentColor}
@@ -377,10 +452,10 @@ export const PdfEditorPage: React.FC = () => {
                                 className="relative bg-white"
                                 ref={pageRef}
                                 onClick={activeTool === 'text' ? addTextAnnotation : undefined}
-                                onMouseDown={activeTool === 'draw' ? startDrawing : undefined}
-                                onMouseMove={activeTool === 'draw' ? continueDrawing : undefined}
-                                onMouseUp={activeTool === 'draw' ? finishDrawing : undefined}
-                                onMouseLeave={activeTool === 'draw' ? finishDrawing : undefined}
+                                onMouseDown={(activeTool === 'draw' || activeTool === 'freehand') ? startDrawing : undefined}
+                                onMouseMove={(activeTool === 'draw' || activeTool === 'freehand') ? continueDrawing : undefined}
+                                onMouseUp={(activeTool === 'draw' || activeTool === 'freehand') ? finishDrawing : undefined}
+                                onMouseLeave={(activeTool === 'draw' || activeTool === 'freehand') ? finishDrawing : undefined}
                             >
                                 <Page
                                     pageNumber={currentPage}
@@ -388,7 +463,7 @@ export const PdfEditorPage: React.FC = () => {
                                     loading={<div className="w-[600px] h-[800px] bg-white animate-pulse"></div>}
                                 />
 
-                                {/* Annotations Layer */}
+                                {/* Text Annotations */}
                                 {textAnnotations
                                     .filter(a => a.page === currentPage)
                                     .map(a => (
@@ -408,6 +483,27 @@ export const PdfEditorPage: React.FC = () => {
                                     ))
                                 }
 
+                                {/* Image Annotations */}
+                                {imageAnnotations
+                                    .filter(a => a.page === currentPage)
+                                    .map(a => (
+                                        <img
+                                            key={a.id}
+                                            src={a.src}
+                                            className="absolute select-none pointer-events-none"
+                                            style={{
+                                                left: a.x,
+                                                top: a.y,
+                                                width: a.width,
+                                                height: a.height,
+                                                border: activeTool === 'select' ? '1px dashed #3b82f6' : 'none'
+                                            }}
+                                        // Draggable Image logic is omitted for brevity, assumed static placement for now
+                                        />
+                                    ))
+                                }
+
+                                {/* Drawing Annotations */}
                                 {drawingAnnotations
                                     .filter(a => a.page === currentPage)
                                     .map(a => (
@@ -444,6 +540,14 @@ export const PdfEditorPage: React.FC = () => {
                                                     strokeWidth={a.strokeWidth}
                                                 />
                                             )}
+                                            {a.type === 'freehand' && a.points.length > 1 && (
+                                                <path
+                                                    d={`M ${a.points.map(p => `${p.x} ${p.y}`).join(' L ')}`}
+                                                    stroke={a.color}
+                                                    strokeWidth={a.strokeWidth}
+                                                    fill="none"
+                                                />
+                                            )}
                                         </svg>
                                     ))
                                 }
@@ -461,6 +565,17 @@ export const PdfEditorPage: React.FC = () => {
                                                 fill="none"
                                             />
                                         )}
+                                        {currentDrawing.type === 'circle' && currentDrawing.points.length >= 2 && (
+                                            <ellipse
+                                                cx={(currentDrawing.points[0].x + currentDrawing.points[1].x) / 2}
+                                                cy={(currentDrawing.points[0].y + currentDrawing.points[1].y) / 2}
+                                                rx={Math.abs(currentDrawing.points[1].x - currentDrawing.points[0].x) / 2}
+                                                ry={Math.abs(currentDrawing.points[1].y - currentDrawing.points[0].y) / 2}
+                                                stroke={currentDrawing.color}
+                                                strokeWidth={currentDrawing.strokeWidth}
+                                                fill="none"
+                                            />
+                                        )}
                                         {currentDrawing.type === 'line' && currentDrawing.points.length >= 2 && (
                                             <line
                                                 x1={currentDrawing.points[0].x}
@@ -469,6 +584,15 @@ export const PdfEditorPage: React.FC = () => {
                                                 y2={currentDrawing.points[1].y}
                                                 stroke={currentDrawing.color}
                                                 strokeWidth={currentDrawing.strokeWidth}
+                                                fill="none"
+                                            />
+                                        )}
+                                        {currentDrawing.type === 'freehand' && currentDrawing.points.length > 1 && (
+                                            <path
+                                                d={`M ${currentDrawing.points.map(p => `${p.x} ${p.y}`).join(' L ')}`}
+                                                stroke={currentDrawing.color}
+                                                strokeWidth={currentDrawing.strokeWidth}
+                                                fill="none"
                                             />
                                         )}
                                     </svg>
