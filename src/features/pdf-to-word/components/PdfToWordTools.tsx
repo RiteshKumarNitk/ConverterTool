@@ -17,56 +17,47 @@ const PdfToWordTools: React.FC = () => {
         setProgress(0);
 
         try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-            let fullText = '';
+            // 1. Upload
+            setProgress(10);
+            const formData = new FormData();
+            formData.append('file', file);
 
-            for (let i = 1; i <= pdf.numPages; i++) {
-                setProgress(Math.round((i / pdf.numPages) * 100));
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-
-                // Simple text extraction
-                const pageText = textContent.items
-                    .map((item: any) => item.str)
-                    .join(' ');
-
-                fullText += pageText + '\n\n';
-            }
-
-            // Create a simple blob for .doc
-            // Note: This creates a simple text file with .doc extension, or simple HTML content.
-            // Real .docx creation in browser is complex without libraries like 'docx'.
-            // For simplicity and "editable Word document", we can wrap text in HTML 
-            // which Word opens happily.
-
-            const htmlContent = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                <head><meta charset='utf-8'><title>Export HTML To Doc</title></head>
-                <body>
-                    ${fullText.replace(/\n/g, '<br/>')}
-                </body>
-                </html>
-            `;
-
-            const blob = new Blob(['\ufeff', htmlContent], {
-                type: 'application/msword'
+            const uploadRes = await fetch('http://localhost:8000/upload', {
+                method: 'POST',
+                body: formData
             });
 
-            const url = URL.createObjectURL(blob);
+            if (!uploadRes.ok) throw new Error('Upload failed');
+            const { file_id } = await uploadRes.json();
+
+            // 2. Process
+            setProgress(40);
+            const processRes = await fetch(`http://localhost:8000/process/${file_id}`, {
+                method: 'POST'
+            });
+
+            if (!processRes.ok) throw new Error('Processing failed');
+
+            // 3. Download
+            setProgress(90);
+            const downloadUrl = `http://localhost:8000/download/${file_id}/docx`;
+
+            // Trigger download
             const link = document.createElement('a');
-            link.href = url;
-            link.download = `${file.name.replace('.pdf', '')}.doc`;
+            link.href = downloadUrl;
+            link.download = `${file.name.replace('.pdf', '')}.docx`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
+            setProgress(100);
+
         } catch (err) {
             console.error("Conversion failed", err);
-            alert("Failed to convert PDF to Word");
+            alert("Failed to convert PDF to Word. Ensure backend is running.");
         } finally {
             setIsConverting(false);
-            setProgress(0);
+            setTimeout(() => setProgress(0), 1000);
         }
     };
 

@@ -16,9 +16,12 @@ import {
   FileSpreadsheet, // Excel
   Crop, // Crop
   ShieldAlert, // Redact
-  File, // Generic File
+
   Languages, // Font Converter
-  ScanText // OCR
+  ScanText, // OCR
+  BrainCircuit, // Doc Intelligence
+  Mic, // TTS
+  Mail // Bulk Sender
 } from "lucide-react";
 import { ToolType } from "../../types";
 import {
@@ -211,6 +214,30 @@ const initialTools: ToolItem[] = [
     icon: <ScanText className="w-8 h-8 text-white" />,
     color: "bg-orange-600",
     gradient: "from-orange-500 to-yellow-600",
+  },
+  {
+    title: "Doc Intelligence",
+    description: "Extract text and tables from documents using AI.",
+    toolKey: "document-intelligence",
+    icon: <BrainCircuit className="w-8 h-8 text-white" />,
+    color: "bg-blue-600",
+    gradient: "from-blue-600 to-indigo-600",
+  },
+  {
+    title: "Text to Speech",
+    description: "Convert text into natural sounding speech using advanced AI voices.",
+    toolKey: "text-to-speech",
+    icon: <Mic className="w-8 h-8 text-white" />,
+    color: "bg-pink-600",
+    gradient: "from-pink-500 to-rose-600",
+  },
+  {
+    title: "Bulk Sender",
+    description: "Send mass Emails and WhatsApp messages using a CSV list.",
+    toolKey: "bulk-sender",
+    icon: <Mail className="w-8 h-8 text-white" />,
+    color: "bg-cyan-600",
+    gradient: "from-cyan-500 to-blue-600",
   },
 ];
 

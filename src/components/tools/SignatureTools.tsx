@@ -151,12 +151,76 @@ export const SignatureTools: React.FC = () => {
 
       if (signMode === 'auto') {
         setSignStatus('Generating Digital ID and Signing...');
-        signedPdfBytes = await signPdfWithGeneratedCert(pdfBuffer);
+
+        const formData = new FormData();
+        formData.append('pdf_file', pdfFile.file);
+        // We need a visual signature image. For now, create a default placeholder or ask user to draw.
+        // To keep existing flow simple, let's create a transparent 1x1 pixel blob or text image
+        // In a real app, we'd have a canvas for them to draw on.
+        // Let's create a dynamic text image "Digitally Signed" on canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = 'transparent'; // Or white if preferred
+          ctx.fillRect(0, 0, 400, 100);
+          ctx.font = '30px Arial';
+          ctx.fillStyle = 'black';
+          ctx.fillText('Digitally Signed by Auto-ID', 10, 60);
+        }
+        const imgBlob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
+        formData.append('signature_image', imgBlob, 'signature.png');
+
+        // Call Backend
+        const response = await fetch('http://localhost:8000/signature', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Backend signing failed');
+        }
+
+        const blob = await response.blob();
+        signedPdfBytes = new Uint8Array(await blob.arrayBuffer());
+
       } else {
         setSignStatus('Signing with your ID...');
         if (!p12File) throw new Error("No P12 file");
-        const p12Buffer = await p12File.arrayBuffer();
-        signedPdfBytes = await signPdfDocument(pdfBuffer, p12Buffer, password);
+
+        const formData = new FormData();
+        formData.append('pdf_file', pdfFile.file);
+        formData.append('p12_file', p12File);
+        if (password) formData.append('password', password);
+
+        // Visual placeholder
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.font = '24px Arial';
+          ctx.fillStyle = 'black';
+          ctx.fillText('Signed with User ID', 10, 60);
+        }
+        const imgBlob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
+        formData.append('signature_image', imgBlob, 'signature.png');
+
+        // Call Backend
+        const response = await fetch('http://localhost:8000/signature', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Backend signing failed');
+        }
+
+        const blob = await response.blob();
+        signedPdfBytes = new Uint8Array(await blob.arrayBuffer());
       }
 
       // Download

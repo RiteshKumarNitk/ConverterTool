@@ -26,6 +26,9 @@ import PdfToWordTools from './features/pdf-to-word/components/PdfToWordTools';
 import CropPdfTools from './features/crop-pdf/components/CropPdfTools';
 import RedactPdfTools from './features/redact-pdf/components/RedactPdfTools';
 import OcrPdfTools from './features/ocr-pdf/components/OcrPdfTools';
+import { DocumentIntelligence } from './components/tools/DocumentIntelligence/DocumentIntelligence';
+import TextToSpeechTools from './features/text-to-speech/components/TextToSpeechTools';
+import BulkNotificationTools from './features/bulk-sender/components/BulkNotificationTools';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -61,6 +64,9 @@ export const App: React.FC = () => {
             <Route path="/crop-pdf" element={<CropPdfTools />} />
             <Route path="/redact-pdf" element={<RedactPdfTools />} />
             <Route path="/ocr-pdf" element={<OcrPdfTools />} />
+            <Route path="/document-intelligence" element={<DocumentIntelligence />} />
+            <Route path="/text-to-speech" element={<TextToSpeechTools />} />
+            <Route path="/bulk-sender" element={<BulkNotificationTools />} />
 
             {/* Optional fallback route */}
             <Route path="*" element={<AllTools />} />
