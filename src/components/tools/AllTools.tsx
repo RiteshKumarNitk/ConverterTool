@@ -21,7 +21,8 @@ import {
   ScanText, // OCR
   BrainCircuit, // Doc Intelligence
   Mic, // TTS
-  Mail // Bulk Sender
+  Mail, // Bulk Sender
+  FileAudio // Audio to Text
 } from "lucide-react";
 import { ToolType } from "../../types";
 import {
@@ -238,6 +239,22 @@ const initialTools: ToolItem[] = [
     icon: <Mail className="w-8 h-8 text-white" />,
     color: "bg-cyan-600",
     gradient: "from-cyan-500 to-blue-600",
+  },
+  {
+    title: "Audio to Text",
+    description: "Transcribe speech to text using AI (Whisper).",
+    toolKey: "audio-to-text",
+    icon: <FileAudio className="w-8 h-8 text-white" />,
+    color: "bg-emerald-600",
+    gradient: "from-emerald-500 to-teal-600",
+  },
+  {
+    title: "Pro PDF Editor",
+    description: "Multi-tool: Merge, Split, Rotate, Compress, Secure.",
+    toolKey: "pdf-editor",
+    icon: <Layers className="w-8 h-8 text-white" />,
+    color: "bg-indigo-600",
+    gradient: "from-indigo-500 to-purple-600",
   },
 ];
 

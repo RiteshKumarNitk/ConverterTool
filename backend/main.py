@@ -1,4 +1,5 @@
 import os
+import asyncio
 import shutil
 import uuid
 from pathlib import Path
@@ -7,6 +8,7 @@ from pydantic import BaseModel
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks, Form
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from processor import process_document
@@ -14,6 +16,8 @@ from signature_service import apply_signature_to_pdf
 from image_enhancer import enhance_image
 from tts_service import generate_speech
 from notification_service import notification_service, JOBS_STORE
+from audio_transcriber import transcribe_audio
+from pdf_editor import pdf_editor
 
 app = FastAPI(title="Document Intelligence API")
 
@@ -31,6 +35,8 @@ UPLOAD_DIR = Path("uploads")
 OUTPUT_DIR = Path("outputs")
 UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
+
+app.mount("/outputs", StaticFiles(directory=OUTPUT_DIR), name="outputs")
 
 @app.get("/")
 async def root():
@@ -277,3 +283,143 @@ async def get_bulk_status(job_id: str):
     if not job:
         raise HTTPException(404, "Job not found")
     return job
+
+# --- Audio to Text Endpoint ---
+
+@app.post("/audio-to-text")
+async def audio_to_text_endpoint(
+    audio_file: UploadFile = File(...),
+    model_size: str = Form("base"), # tiny, base, small, medium, large
+    language: Optional[str] = Form(None)
+):
+    valid_exts = ('.mp3', '.wav', '.m4a', '.ogg', '.webm')
+    if not audio_file.filename.lower().endswith(valid_exts):
+        raise HTTPException(400, f"Invalid format. Supported: {valid_exts}")
+    
+    # Save temp file
+    temp_filename = f"audio_{uuid.uuid4()}_{audio_file.filename}"
+    temp_path = OUTPUT_DIR / temp_filename
+    
+    try:
+        with open(temp_path, "wb") as f:
+            content = await audio_file.read()
+            f.write(content)
+            
+        # Process (Run in thread pool to avoid blocking async loop)
+        # Whisper is CPU/GPU intensive blocking code
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None, 
+            lambda: transcribe_audio(str(temp_path), model_size, language)
+        )
+        
+        return result
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+# --- PDF to Image Endpoint ---
+
+@app.post("/pdf-to-image")
+async def pdf_to_image_endpoint(file: UploadFile = File(...)):
+    # Save Upload
+    file_id = str(uuid.uuid4())
+    upload_path = OUTPUT_DIR / f"upload_{file_id}_{file.filename}"
+    with open(upload_path, "wb") as buffer:
+        buffer.write(await file.read())
+        
+    try:
+        # Convert
+        images = pdf_editor.convert_to_images(str(upload_path), str(OUTPUT_DIR))
+        
+        # Return list of image filenames
+        return {"images": images}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    finally:
+        if os.path.exists(upload_path):
+            os.remove(upload_path)
+
+# --- Advanced PDF Editor Endpoint ---
+
+@app.post("/pdf/edit")
+async def advanced_pdf_edit(
+    files: List[UploadFile] = File(...),
+    operation: str = Form(...), # merge, split, rotate, compress, protect, unlock, watermark
+    options: str = Form("{}")   # JSON string of options
+):
+    import json
+    opts = json.loads(options)
+    
+    # Save Uploads
+    saved_paths = []
+    for f in files:
+        path = OUTPUT_DIR / f"upload_{uuid.uuid4()}_{f.filename}"
+        with open(path, "wb") as buffer:
+            buffer.write(await f.read())
+        saved_paths.append(str(path))
+        
+    output_filename = f"edited_{uuid.uuid4()}.pdf"
+    output_path = str(OUTPUT_DIR / output_filename)
+    
+    try:
+        # Route Operation
+        if operation == "merge":
+            pdf_editor.merge_pdfs(saved_paths, output_path)
+            
+        elif operation == "rotate":
+            rotation = int(opts.get("rotation", 90))
+            pdf_editor.rotate_pdf(saved_paths[0], output_path, rotation)
+            
+        elif operation == "compress":
+            pdf_editor.compress_pdf(saved_paths[0], output_path)
+            
+        elif operation == "protect":
+            password = opts.get("password", "secret")
+            pdf_editor.protect_pdf(saved_paths[0], output_path, password)
+            
+        elif operation == "unlock":
+            password = opts.get("password", "")
+            success = pdf_editor.unlock_pdf(saved_paths[0], output_path, password)
+            if not success:
+                raise HTTPException(400, "Incorrect Password")
+                
+        elif operation == "watermark":
+            text = opts.get("text", "CONFIDENTIAL")
+            pdf_editor.add_watermark(saved_paths[0], output_path, text)
+            
+        elif operation == "split":
+            # Split is unique as it returns a zip or multiple files. 
+            # For simplicity, we'll return the first part or zip it.
+            # Here implementing simplistic return of ONE file (range extract) or First page.
+            # Real production would zip them multiple outputs.
+            mode = opts.get("mode", "range")
+            ranges = opts.get("ranges", "1")
+            results = pdf_editor.split_pdf(saved_paths[0], str(OUTPUT_DIR), mode, ranges)
+            if results:
+                output_path = results[0] # Return just the first one for now
+                output_filename = os.path.basename(output_path)
+        
+        else:
+            raise HTTPException(400, "Unknown Operation")
+
+        return FileResponse(output_path, filename=output_filename)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    finally:
+        # Cleanup Inputs
+        for p in saved_paths:
+            if os.path.exists(p):
+                os.remove(p)

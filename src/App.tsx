@@ -29,6 +29,9 @@ import OcrPdfTools from './features/ocr-pdf/components/OcrPdfTools';
 import { DocumentIntelligence } from './components/tools/DocumentIntelligence/DocumentIntelligence';
 import TextToSpeechTools from './features/text-to-speech/components/TextToSpeechTools';
 import BulkNotificationTools from './features/bulk-sender/components/BulkNotificationTools';
+import AudioToTextTools from './features/audio-to-text/components/AudioToTextTools';
+import AdvancedPdfEditor from './features/pdf-editor/components/AdvancedPdfEditor';
+import PdfToImageTools from './features/pdf-to-image/components/PdfToImageTools';
 
 export const App: React.FC = () => {
   const isMobile = useMobileDetection();
@@ -41,7 +44,7 @@ export const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<AllTools />} />
             <Route path="/pdf" element={<PdfTools />} />
-            <Route path="/image" element={<ImageTools isMobile={isMobile} />} />
+            <Route path="/image" element={<PdfToImageTools />} />
             <Route path="/signature" element={<SignatureTools />} />
             <Route path="/merge" element={<MergeTools />} />
             <Route path="/rename-image" element={<RenameImageTools />} />
@@ -67,6 +70,8 @@ export const App: React.FC = () => {
             <Route path="/document-intelligence" element={<DocumentIntelligence />} />
             <Route path="/text-to-speech" element={<TextToSpeechTools />} />
             <Route path="/bulk-sender" element={<BulkNotificationTools />} />
+            <Route path="/audio-to-text" element={<AudioToTextTools />} />
+            <Route path="/pdf-editor" element={<AdvancedPdfEditor />} />
 
             {/* Optional fallback route */}
             <Route path="*" element={<AllTools />} />

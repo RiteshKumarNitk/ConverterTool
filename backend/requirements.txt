@@ -17,3 +17,7 @@ gTTS==2.5.0
 pydub==0.25.1
 aiofiles==23.2.1
 pywhatkit==5.4
+openai-whisper==20231117
+ffmpeg-python==0.2.0
+pikepdf==8.13.0
+reportlab==4.0.9
