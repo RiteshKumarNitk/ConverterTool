@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { Mic, Upload, FileAudio, CheckCircle, Copy, Download, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 
 const AudioToTextTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -30,7 +31,7 @@ const AudioToTextTools: React.FC = () => {
         if (language) formData.append('language', language);
 
         try {
-            const res = await fetch('http://localhost:8000/audio-to-text', {
+            const res = await fetch(`${API_BASE_URL}/audio-to-text`, {
                 method: 'POST',
                 body: formData
             });

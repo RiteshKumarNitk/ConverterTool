@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { Mail, MessageSquare, Send, Upload, FileSpreadsheet, Loader2, CheckCircle, AlertCircle, Settings } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 
 interface Recipient {
     name?: string;
@@ -45,7 +46,7 @@ const BulkNotificationTools: React.FC = () => {
         formData.append('file', uploadedFile);
 
         try {
-            const res = await fetch('http://localhost:8000/bulk/upload', {
+            const res = await fetch(`${API_BASE_URL}/bulk/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -71,7 +72,7 @@ const BulkNotificationTools: React.FC = () => {
         setLogs(["Creating job..."]);
 
         try {
-            const res = await fetch('http://localhost:8000/bulk/send', {
+            const res = await fetch(`${API_BASE_URL}/bulk/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -96,7 +97,7 @@ const BulkNotificationTools: React.FC = () => {
 
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`http://localhost:8000/bulk/status/${jobId}`);
+                const res = await fetch(`${API_BASE_URL}/bulk/status/${jobId}`);
                 if (res.ok) {
                     const job = await res.json();
                     setProgress(job.progress);

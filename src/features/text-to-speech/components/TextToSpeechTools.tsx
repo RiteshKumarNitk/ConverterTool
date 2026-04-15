@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { Mic, Play, Download, Loader2, Volume2, Languages, Settings2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
+import { API_BASE_URL } from '../../../config';
 
 const TextToSpeechTools: React.FC = () => {
     const [text, setText] = useState('');
@@ -44,7 +45,7 @@ const TextToSpeechTools: React.FC = () => {
         setAudioUrl(null);
 
         try {
-            const response = await fetch('http://localhost:8000/text-to-speech', {
+            const response = await fetch(`${API_BASE_URL}/text-to-speech`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { FileText, Download, Loader2, FileType } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 import { pdfjs } from 'react-pdf';
 import '../../../utils/pdf-worker';
 
@@ -22,7 +23,7 @@ const PdfToWordTools: React.FC = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const uploadRes = await fetch('http://localhost:8000/upload', {
+            const uploadRes = await fetch(`${API_BASE_URL}/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -32,7 +33,7 @@ const PdfToWordTools: React.FC = () => {
 
             // 2. Process
             setProgress(40);
-            const processRes = await fetch(`http://localhost:8000/process/${file_id}`, {
+            const processRes = await fetch(`${API_BASE_URL}/process/${file_id}`, {
                 method: 'POST'
             });
 
@@ -40,7 +41,7 @@ const PdfToWordTools: React.FC = () => {
 
             // 3. Download
             setProgress(90);
-            const downloadUrl = `http://localhost:8000/download/${file_id}/docx`;
+            const downloadUrl = `${API_BASE_URL}/download/${file_id}/docx`;
 
             // Trigger download
             const link = document.createElement('a');

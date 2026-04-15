@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { Wand2, Upload, Download, Loader2, Sparkles, Zap, Image as ImageIcon, ScanEye } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
 
 const ImageEnhancerTools: React.FC = () => {
@@ -31,7 +32,7 @@ const ImageEnhancerTools: React.FC = () => {
             formData.append('enhancement_type', mode);
             formData.append('upscale_factor', upscale.toString());
 
-            const response = await fetch('http://localhost:8000/image-enhancer', {
+            const response = await fetch(`${API_BASE_URL}/image-enhancer`, {
                 method: 'POST',
                 body: formData
             });

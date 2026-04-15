@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { FileText, Download, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 
 const PdfToImageTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -30,7 +31,7 @@ const PdfToImageTools: React.FC = () => {
         formData.append('file', file);
 
         try {
-            const res = await fetch('http://localhost:8000/pdf-to-image', {
+            const res = await fetch(`${API_BASE_URL}/pdf-to-image`, {
                 method: 'POST',
                 body: formData
             });
@@ -43,14 +44,14 @@ const PdfToImageTools: React.FC = () => {
             // data.images = ["filename1.png", "filename2.png"]
 
             // Construct full URLs
-            const urls = data.images.map((img: string) => `http://localhost:8000/download/${img}/file`);
+            const urls = data.images.map((img: string) => `${API_BASE_URL}/download/${img}/file`);
             // Note: need to adjust download endpoint to support direct file access or specific images
             // Simply use static serving or download endpoint with loose format.
 
             // Actually, main.py download endpoint requires file_id. 
             // Let's assume the backend returns direct download URLs or we construct them.
             // Let's refine backend first.
-            setResultUrls(data.images.map((img: string) => `http://localhost:8000/outputs/${img}`));
+            setResultUrls(data.images.map((img: string) => `${API_BASE_URL}/outputs/${img}`));
 
         } catch (e) {
             console.error(e);

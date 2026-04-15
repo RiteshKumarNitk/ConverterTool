@@ -4,6 +4,7 @@ import { ToolLayout } from '../layout/ToolLayout';
 import { FileDropzone } from '../common/FileDropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '../ui/Button';
+import { API_BASE_URL } from '../../config';
 import { Card } from '../ui/Card';
 import { signPdfDocument, signPdfWithGeneratedCert } from '../../utils/digital-signature';
 
@@ -173,7 +174,7 @@ export const SignatureTools: React.FC = () => {
         formData.append('signature_image', imgBlob, 'signature.png');
 
         // Call Backend
-        const response = await fetch('http://localhost:8000/signature', {
+        const response = await fetch(`${API_BASE_URL}/signature`, {
           method: 'POST',
           body: formData
         });
@@ -209,7 +210,7 @@ export const SignatureTools: React.FC = () => {
         formData.append('signature_image', imgBlob, 'signature.png');
 
         // Call Backend
-        const response = await fetch('http://localhost:8000/signature', {
+        const response = await fetch(`${API_BASE_URL}/signature`, {
           method: 'POST',
           body: formData
         });

@@ -3,6 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { FileText, Layers, Scissors, RotateCw, Lock, Unlock, Image as ImageIcon, CheckCircle, Loader2, Download, Minimize2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
+import { API_BASE_URL } from '../../../config';
 
 type OperationMode = 'merge' | 'split' | 'rotate' | 'compress' | 'protect' | 'unlock' | 'watermark';
 
@@ -48,7 +49,7 @@ const AdvancedPdfEditor: React.FC = () => {
         formData.append('options', JSON.stringify(options));
 
         try {
-            const res = await fetch('http://localhost:8000/pdf/edit', {
+            const res = await fetch(`${API_BASE_URL}/pdf/edit`, {
                 method: 'POST',
                 body: formData
             });
