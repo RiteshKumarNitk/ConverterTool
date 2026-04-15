@@ -2,7 +2,14 @@
  * Centralized API configuration.
  * Uses environment variable VITE_API_URL or defaults to localhost:8000.
  */
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const getApiBaseUrl = () => {
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+    // Fallback: Use the same hostname as the frontend but on port 8000
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    return `http://${hostname}:8000`;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const API_ENDPOINTS = {
     UPLOAD: `${API_BASE_URL}/upload`,
