@@ -3,6 +3,8 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { Mic, Play, Download, Loader2, Volume2, Languages, Settings2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { API_BASE_URL } from '../../../config';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 const TextToSpeechTools: React.FC = () => {
     const [text, setText] = useState('');
@@ -10,6 +12,7 @@ const TextToSpeechTools: React.FC = () => {
     const [speed, setSpeed] = useState(1.0);
     const [pitch, setPitch] = useState(1.0);
     const [voice, setVoice] = useState<string>('');
+    const { status, retry } = useBackendStatus();
 
     // Curated list of high-quality neural voices
     const VOICE_OPTIONS = {
@@ -86,6 +89,7 @@ const TextToSpeechTools: React.FC = () => {
             description="Convert text into natural sounding speech using advanced AI voices."
             icon={<Mic className="w-10 h-10 text-pink-600" />}
         >
+            <BackendRequired status={status} onRetry={retry}>
             <div className="max-w-4xl mx-auto space-y-8">
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -217,6 +221,7 @@ const TextToSpeechTools: React.FC = () => {
                     </div>
                 </div>
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

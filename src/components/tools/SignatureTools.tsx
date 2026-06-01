@@ -7,6 +7,8 @@ import { Button } from '../ui/Button';
 import { API_BASE_URL } from '../../config';
 import { Card } from '../ui/Card';
 import { signPdfDocument, signPdfWithGeneratedCert } from '../../utils/digital-signature';
+import { useBackendStatus } from '../../hooks/useBackendStatus';
+import { BackendRequired } from '../common/BackendRequired';
 
 // Ensure worker is configured
 import '../../utils/pdf-worker';
@@ -24,11 +26,13 @@ export const SignatureTools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   // Signing State
-  const [signMode, setSignMode] = useState<'auto' | 'p12'>('auto'); // Default to Auto
+  const [signMode, setSignMode] = useState<'auto' | 'p12'>('auto');
   const [p12File, setP12File] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [isSigning, setIsSigning] = useState(false);
   const [signStatus, setSignStatus] = useState<string>('');
+
+  const { status, retry } = useBackendStatus();
 
   // Function to check for signatures
   const checkSignature = async (file: File): Promise<boolean> => {
@@ -253,6 +257,7 @@ export const SignatureTools: React.FC = () => {
       description="View, verify, and manage signed PDF documents. Automatically detects digital signatures in your uploaded files."
       icon={<PenTool className="w-10 h-10 text-rose-600" />}
     >
+      <BackendRequired status={status} onRetry={retry}>
       <div className="space-y-8 max-w-6xl mx-auto">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -450,6 +455,7 @@ export const SignatureTools: React.FC = () => {
         </div>
 
       </div>
+      </BackendRequired>
     </ToolLayout>
   );
 };

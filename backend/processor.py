@@ -14,44 +14,63 @@ from pdf2image import convert_from_path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configure Tesseract path - ADJUST THIS IF NEEDED ON WINDOWS
-# Configure Tesseract path - Auto-detect on Windows
-potential_tesseract_paths = [
+# ── Tesseract auto-detection ──────────────────────────────────────────────────
+_TESSERACT_PATHS = [
     r'C:\Program Files\Tesseract-OCR\tesseract.exe',
     r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
-    r'C:\Users\RiteshKumar\AppData\Local\Tesseract-OCR\tesseract.exe'
+    r'C:\Users\RiteshKumar\AppData\Local\Tesseract-OCR\tesseract.exe',
+    r'C:\Users\RITESH\AppData\Local\Tesseract-OCR\tesseract.exe',
 ]
 
-for path in potential_tesseract_paths:
-    if os.path.exists(path):
-        pytesseract.pytesseract.tesseract_cmd = path
-        logger.info(f"Tesseract found at: {path}")
+_tesseract_found = False
+for _path in _TESSERACT_PATHS:
+    if os.path.exists(_path):
+        pytesseract.pytesseract.tesseract_cmd = _path
+        logger.info(f"Tesseract found at: {_path}")
+        _tesseract_found = True
         break
-    logger.warning("Tesseract EXE not found in common paths. Ensure it is in your PATH or update potential_tesseract_paths.")
-    # Log current PATH for debugging
-    logger.info(f"Current PATH: {os.environ.get('PATH')}") 
 
-# Configure Poppler path - Auto-detect to avoid PATH issues
-potential_poppler_paths = [
+if not _tesseract_found:
+    # Try to find it on PATH (Linux/Mac/Windows with PATH configured)
+    import shutil
+    _tess_on_path = shutil.which("tesseract")
+    if _tess_on_path:
+        pytesseract.pytesseract.tesseract_cmd = _tess_on_path
+        logger.info(f"Tesseract found on PATH: {_tess_on_path}")
+    else:
+        logger.warning(
+            "Tesseract not found. OCR features will be unavailable. "
+            "Install from https://github.com/UB-Mannheim/tesseract/wiki"
+        )
+
+# ── Poppler auto-detection ────────────────────────────────────────────────────
+_POPPLER_PATHS = [
     r'C:\Program Files\poppler\Library\bin',
     r'C:\Program Files\poppler\bin',
     r'C:\poppler\Library\bin',
     r'C:\poppler\bin',
-    r'C:\Program Files\poppler-25.12.0\Library\bin', # User specific path
-    r'C:\Users\RiteshKumar\Downloads\Release-24.02.0-0\poppler-24.02.0\Library\bin' # Common download location
+    r'C:\Program Files\poppler-25.12.0\Library\bin',
+    r'C:\Users\RiteshKumar\Downloads\Release-24.02.0-0\poppler-24.02.0\Library\bin',
+    r'C:\Users\RITESH\Downloads\Release-24.02.0-0\poppler-24.02.0\Library\bin',
 ]
 
-poppler_found = False
-for p_path in potential_poppler_paths:
-    if os.path.exists(p_path):
-        # Add to PATH programmatically for this session
-        os.environ["PATH"] += os.pathsep + p_path
-        logger.info(f"Poppler found and added to PATH: {p_path}")
-        poppler_found = True
+_poppler_path_arg = None  # Will be passed to convert_from_path if found
+for _p in _POPPLER_PATHS:
+    if os.path.exists(_p):
+        os.environ["PATH"] += os.pathsep + _p
+        _poppler_path_arg = _p
+        logger.info(f"Poppler found at: {_p}")
         break
-        
-if not poppler_found:
-    logger.warning("Poppler not found in common paths. PDF to Image conversion might fail.") 
+
+if _poppler_path_arg is None:
+    import shutil
+    if shutil.which("pdftoppm"):
+        logger.info("Poppler found on system PATH.")
+    else:
+        logger.warning(
+            "Poppler not found. PDF→Image OCR fallback will be unavailable. "
+            "Install from https://github.com/oschwartz10612/poppler-windows/releases/"
+        )
 
 def process_document(file_path: str, output_dir: str, file_id: str):
     """
@@ -130,12 +149,16 @@ def _process_pdf(file_path):
 def _ocr_pdf_images(file_path):
     # Convert PDF to images
     try:
-        images = convert_from_path(file_path)
+        # Pass poppler_path if we found it, otherwise rely on PATH
+        convert_kwargs = {}
+        if _poppler_path_arg:
+            convert_kwargs["poppler_path"] = _poppler_path_arg
+
+        images = convert_from_path(file_path, **convert_kwargs)
         text_content = []
-        # We won't do deep table extraction on OCR'd images in this simple version
         
         for img in images:
-             # Convert PIL to CV2
+            # Convert PIL to CV2
             open_cv_image = np.array(img) 
             # OCR
             text = pytesseract.image_to_string(open_cv_image, lang='eng+hin')
@@ -161,11 +184,14 @@ def _process_image(file_path):
         
         # Verify Tesseract is ready
         try:
-             version = pytesseract.get_tesseract_version()
-             logger.info(f"Tesseract Version: {version}")
+            version = pytesseract.get_tesseract_version()
+            logger.info(f"Tesseract Version: {version}")
         except Exception as e:
-             logger.error(f"Tesseract check failed: {e}")
-             raise RuntimeError("Tesseract is not installed or not in PATH. Please install Tesseract-OCR.")
+            raise RuntimeError(
+                "Tesseract is not installed or not found. "
+                "Please install from https://github.com/UB-Mannheim/tesseract/wiki "
+                f"(detail: {e})"
+            )
 
         # OCR
         text = pytesseract.image_to_string(gray, lang='eng+hin')

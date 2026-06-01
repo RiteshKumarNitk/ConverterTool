@@ -4,12 +4,15 @@ import { PreviewPanel } from './PreviewPanel';
 import { uploadFile, processDocument } from './apiService';
 import { ArrowLeft, BrainCircuit } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../common/BackendRequired';
 
 export const DocumentIntelligence: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [currentFileId, setCurrentFileId] = useState<string | null>(null);
     const [data, setData] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const { status, capabilities, retry } = useBackendStatus();
 
     const handleFileUpload = async (file: File) => {
         setIsLoading(true);
@@ -53,6 +56,7 @@ export const DocumentIntelligence: React.FC = () => {
             </div>
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <BackendRequired status={status} capabilities={capabilities} requires={['tesseract', 'poppler']} onRetry={retry}>
 
                 {/* Intro */}
                 {!data && !isLoading && (
@@ -90,7 +94,7 @@ export const DocumentIntelligence: React.FC = () => {
                         <PreviewPanel data={data} fileId={currentFileId!} />
                     </div>
                 )}
-
+                </BackendRequired>
             </div>
         </div>
     );

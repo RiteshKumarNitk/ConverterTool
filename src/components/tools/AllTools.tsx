@@ -11,18 +11,18 @@ import {
   ImageDown,
   Minimize2,
   Filter,
-  Wand2, // For 'Image to any'
+  Wand2,
   Sparkles,
-  FileSpreadsheet, // Excel
-  Crop, // Crop
-  ShieldAlert, // Redact
-
-  Languages, // Font Converter
-  ScanText, // OCR
-  BrainCircuit, // Doc Intelligence
-  Mic, // TTS
-  Mail, // Bulk Sender
-  FileAudio // Audio to Text
+  FileSpreadsheet,
+  Crop,
+  ShieldAlert,
+  Languages,
+  ScanText,
+  BrainCircuit,
+  Mic,
+  Mail,
+  FileAudio,
+  Server,
 } from "lucide-react";
 import { ToolType } from "../../types";
 import {

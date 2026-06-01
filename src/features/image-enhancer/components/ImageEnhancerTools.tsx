@@ -5,12 +5,15 @@ import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 const ImageEnhancerTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [enhancedUrl, setEnhancedUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const { status, retry } = useBackendStatus();
 
     // Configuration
     const [mode, setMode] = useState<'auto' | 'deblur' | 'sharpen' | 'contrast' | 'denoise'>('auto');
@@ -80,6 +83,7 @@ const ImageEnhancerTools: React.FC = () => {
             description="Unblur, sharpen, and upscale your images using advanced computer vision."
             icon={<Wand2 className="w-10 h-10 text-violet-600" />}
         >
+            <BackendRequired status={status} onRetry={retry}>
             <div className="max-w-6xl mx-auto space-y-8">
 
                 {/* Upload Section */}
@@ -229,6 +233,7 @@ const ImageEnhancerTools: React.FC = () => {
                     </div>
                 )}
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

@@ -62,3 +62,10 @@ def transcribe_audio(file_path: str, model_size: str = "base", language: str = N
     except Exception as e:
         print(f"Transcription Error: {e}")
         raise ValueError(f"Transcription failed: {str(e)}")
+    finally:
+        # Always clean up the temp audio file
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as cleanup_err:
+                print(f"[WARN] Could not delete temp file {file_path}: {cleanup_err}")

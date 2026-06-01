@@ -42,6 +42,22 @@ app.mount("/outputs", StaticFiles(directory=OUTPUT_DIR), name="outputs")
 async def root():
     return {"message": "Document Intelligence API is running"}
 
+@app.get("/health")
+async def health_check():
+    """Quick health-check used by the frontend to detect backend availability."""
+    import shutil
+    return {
+        "status": "ok",
+        "tesseract": bool(shutil.which("tesseract") or any(
+            os.path.exists(p) for p in [
+                r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+                r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
+            ]
+        )),
+        "poppler": bool(shutil.which("pdftoppm")),
+        "ffmpeg": bool(shutil.which("ffmpeg")),
+    }
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
@@ -318,9 +334,10 @@ async def audio_to_text_endpoint(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        # Clean up temp file on error (transcribe_audio also tries, but belt-and-suspenders)
         if os.path.exists(temp_path):
             os.remove(temp_path)
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- PDF to Image Endpoint ---
 
@@ -397,16 +414,26 @@ async def advanced_pdf_edit(
             pdf_editor.add_watermark(saved_paths[0], output_path, text)
             
         elif operation == "split":
-            # Split is unique as it returns a zip or multiple files. 
-            # For simplicity, we'll return the first part or zip it.
-            # Here implementing simplistic return of ONE file (range extract) or First page.
-            # Real production would zip them multiple outputs.
             mode = opts.get("mode", "range")
             ranges = opts.get("ranges", "1")
             results = pdf_editor.split_pdf(saved_paths[0], str(OUTPUT_DIR), mode, ranges)
-            if results:
-                output_path = results[0] # Return just the first one for now
+            if not results:
+                raise HTTPException(400, "Split produced no output files")
+            
+            if len(results) == 1:
+                # Single result — return directly
+                output_path = results[0]
                 output_filename = os.path.basename(output_path)
+            else:
+                # Multiple results — zip them
+                import zipfile
+                zip_filename = f"split_{uuid.uuid4()}.zip"
+                zip_path = str(OUTPUT_DIR / zip_filename)
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                    for r in results:
+                        zf.write(r, os.path.basename(r))
+                output_path = zip_path
+                output_filename = zip_filename
         
         else:
             raise HTTPException(400, "Unknown Operation")

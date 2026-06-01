@@ -4,6 +4,8 @@ import { Mail, MessageSquare, Send, Upload, FileSpreadsheet, Loader2, CheckCircl
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 interface Recipient {
     name?: string;
@@ -15,6 +17,7 @@ interface Recipient {
 const BulkNotificationTools: React.FC = () => {
     // Steps: upload -> compose -> sending
     const [step, setStep] = useState<'upload' | 'compose' | 'sending'>('upload');
+    const { status, retry } = useBackendStatus();
 
     // Data
     const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -122,6 +125,7 @@ const BulkNotificationTools: React.FC = () => {
             description="Send mass Emails and WhatsApp messages using a CSV list."
             icon={<Mail className="w-10 h-10 text-cyan-600" />}
         >
+            <BackendRequired status={status} onRetry={retry}>
             <div className="max-w-5xl mx-auto">
 
                 {/* Step 1: Upload */}
@@ -283,6 +287,7 @@ const BulkNotificationTools: React.FC = () => {
                 )}
 
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

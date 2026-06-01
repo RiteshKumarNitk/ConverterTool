@@ -4,6 +4,8 @@ import { FileText, Layers, Scissors, RotateCw, Lock, Unlock, Image as ImageIcon,
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 type OperationMode = 'merge' | 'split' | 'rotate' | 'compress' | 'protect' | 'unlock' | 'watermark';
 
@@ -12,6 +14,7 @@ const AdvancedPdfEditor: React.FC = () => {
     const [mode, setMode] = useState<OperationMode>('merge');
     const [isProcessing, setIsProcessing] = useState(false);
     const [resultUrl, setResultUrl] = useState<string | null>(null);
+    const { status, retry } = useBackendStatus();
 
     // Options
     const [password, setPassword] = useState('');
@@ -88,6 +91,7 @@ const AdvancedPdfEditor: React.FC = () => {
             description="Merge, Split, Rotate, Compress, and Secure PDFs."
             icon={<Layers className="w-10 h-10 text-indigo-600" />}
         >
+            <BackendRequired status={status} onRetry={retry}>
             <div className="max-w-6xl mx-auto space-y-8">
 
                 {/* Mode Selector */}
@@ -250,6 +254,7 @@ const AdvancedPdfEditor: React.FC = () => {
                     </div>
                 </div>
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

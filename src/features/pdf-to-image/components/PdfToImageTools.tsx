@@ -4,11 +4,14 @@ import { FileText, Download, Loader2, CheckCircle, Image as ImageIcon } from 'lu
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 const PdfToImageTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [resultUrls, setResultUrls] = useState<string[]>([]);
+    const { status, retry } = useBackendStatus();
 
     const handleFileSelect = (uploadedFile: File) => {
         setFile(uploadedFile);
@@ -67,6 +70,7 @@ const PdfToImageTools: React.FC = () => {
             description="Convert PDF pages to high-quality images."
             icon={<FileText className="w-10 h-10 text-emerald-600" />}
         >
+            <BackendRequired status={status} onRetry={retry}>
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                     {!file ? (
@@ -144,6 +148,7 @@ const PdfToImageTools: React.FC = () => {
                     </div>
                 )}
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

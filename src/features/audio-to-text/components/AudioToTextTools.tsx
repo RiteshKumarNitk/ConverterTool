@@ -4,12 +4,15 @@ import { Mic, Upload, FileAudio, CheckCircle, Copy, Download, Loader2 } from 'lu
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 const AudioToTextTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcript, setTranscript] = useState<string>('');
     const [detectedLang, setDetectedLang] = useState<string>('');
+    const { status, capabilities, retry } = useBackendStatus();
 
     // Config
     const [modelSize, setModelSize] = useState('base');
@@ -71,6 +74,7 @@ const AudioToTextTools: React.FC = () => {
             description="Transcribe audio files with high accuracy using OpenAI Whisper."
             icon={<Mic className="w-10 h-10 text-emerald-600" />}
         >
+            <BackendRequired status={status} capabilities={capabilities} requires={['ffmpeg']} onRetry={retry}>
             <div className="max-w-4xl mx-auto space-y-8">
 
                 {/* Upload Section */}
@@ -196,6 +200,7 @@ const AudioToTextTools: React.FC = () => {
                     </div>
                 )}
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

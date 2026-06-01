@@ -6,11 +6,14 @@ import { FileDropzone } from '../../../components/common/FileDropzone';
 import { API_BASE_URL } from '../../../config';
 import { pdfjs } from 'react-pdf';
 import '../../../utils/pdf-worker';
+import { useBackendStatus } from '../../../hooks/useBackendStatus';
+import { BackendRequired } from '../../../components/common/BackendRequired';
 
 const PdfToWordTools: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [isConverting, setIsConverting] = useState(false);
     const [progress, setProgress] = useState(0);
+    const { status, capabilities, retry } = useBackendStatus();
 
     const convertToWord = async () => {
         if (!file) return;
@@ -68,6 +71,7 @@ const PdfToWordTools: React.FC = () => {
             description="Convert PDF documents to editable Word files."
             icon={<FileText className="w-10 h-10 text-blue-600" />}
         >
+            <BackendRequired status={status} capabilities={capabilities} requires={['tesseract', 'poppler']} onRetry={retry}>
             <div className="space-y-8">
                 {!file ? (
                     <div className="max-w-3xl mx-auto">
@@ -130,6 +134,7 @@ const PdfToWordTools: React.FC = () => {
                     </div>
                 )}
             </div>
+            </BackendRequired>
         </ToolLayout>
     );
 };

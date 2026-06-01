@@ -3,7 +3,7 @@ import { ToolLayout } from '../../../components/layout/ToolLayout';
 import { ScanText, FileText, Loader2, Download, Copy, RefreshCw, Languages } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { FileDropzone } from '../../../components/common/FileDropzone';
-import { pdfjs } from 'react-pdf';
+import { pdfjs, Document, Page } from 'react-pdf';
 import Tesseract from 'tesseract.js';
 import '../../../utils/pdf-worker';
 
@@ -189,12 +189,21 @@ const OcrPdfTools: React.FC = () => {
 
                         {extractedText && (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
-                                {/* Original File Preview (First page only for context) */}
-                                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center p-4">
-                                    <p className="text-gray-400 text-center">
-                                        (File Preview Placeholder)<br />
-                                        PDF pages are processed individually.
-                                    </p>
+                                {/* Original File Preview */}
+                                <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    <Document
+                                        file={file}
+                                        className="w-full h-full flex items-center justify-center"
+                                        loading={<div className="text-gray-400 text-sm">Loading preview…</div>}
+                                        error={<div className="text-gray-400 text-sm p-4 text-center">Preview unavailable</div>}
+                                    >
+                                        <Page
+                                            pageNumber={1}
+                                            width={380}
+                                            renderTextLayer={false}
+                                            renderAnnotationLayer={false}
+                                        />
+                                    </Document>
                                 </div>
 
                                 {/* Extracted Text */}
